@@ -6,7 +6,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
 [![Open Issues](https://img.shields.io/github/issues/AUTOM77/Rimc)](https://github.com/AUTOM77/Rimc/issues)
 
-> Rimc, a Rust based Multi-Modal Hyper Caption Tool
+> Rimc, a Rust based Multi-Modal Hyper Caption Tool in Parallel
 
 ## I. Usage
 
@@ -24,5 +24,20 @@ rimc -d ${dir_path} -c `config.toml`
 ## II. Example of `config.toml`
 
 ```bash
+cat <<EOF | tee config.toml
+[prompt]
+value = "Caption this media"
 
+[gemini]
+keys = [
+    "AIza00000000000000000000000000000000000",
+    "AIza00000000000000000000000000000000001",
+]
+
+[gpt4v]
+keys = [
+    "sk-00000000000000000000000000000000",
+    "sk-00000000000000000000000000000001",
+]
+EOF
 ```
