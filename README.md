@@ -7,25 +7,21 @@
 
 > Rimc, a Rust based Multi-Modal Hyper Caption Tool in Parallel
 
-## Usage
+### Usage
 
-### single media
-
-For a single image/video, it will returns a `*.txt`.
+1. For a single image/video, it will returns a `*.txt`.
 
 ```bash
 rimc -f ${file_path} -c `config.toml`
 ```
 
-### bucket media
-
-For a batch of image/video list, it will returns a list of `*.txt`.
+2. For a batch of image/video list, it will returns a list of `*.txt`.
 
 ```bash
 rimc -d ${dir_path} -c `config.toml`
 ```
 
-## Config
+### Config
 
 ```bash
 cat <<EOF | tee config.toml
