@@ -1,0 +1,11 @@
+[package]
+name = "librimc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.37.0", features = ["full"] }
+
+[lib]
+name = "librimc"
+path = "src/lib.rs"

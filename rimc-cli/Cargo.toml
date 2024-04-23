@@ -1,0 +1,12 @@
+[package]
+name = "rimc-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+librimc = { path = "../rimc" }
+clap = { version= "4.5.4", features=["derive"] }
+
+[[bin]]
+name = "rimc"
+path = "src/cli.rs"
