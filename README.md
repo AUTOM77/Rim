@@ -9,21 +9,27 @@
 
 ### Usage
 
-1. For a single image/video, it will returns a `*.txt`.
+1. **Single Image/Video Captioning:**
+
+Rimc generates a `*.txt` file containing the caption for a single image or video.
 
 ```bash
 rimc -f ${file_path} -c `config.toml`
 ```
 
-2. For a batch of image/video list, it will returns a list of `*.txt`.
+2. **Batch Image/Video Captioning:**
+
+For a directory of images or videos, `Rimc` generates a corresponding list of `*.txt` caption files.
 
 ```bash
 rimc -d ${dir_path} -c `config.toml`
 ```
 
+3. Sample `config.toml` can be found in [config.toml](./config.toml)
+
 ### Config
 
-Sample `config.toml` can be found in [config.toml](./config.toml)
+Creating a Sample Configuration (Unix):
 
 ```bash
 cat <<EOF | tee config.toml
