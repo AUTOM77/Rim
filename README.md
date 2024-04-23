@@ -23,6 +23,8 @@ rimc -d ${dir_path} -c `config.toml`
 
 ### Config
 
+Sample `config.toml` can be found in [config.toml](./config.toml)
+
 ```bash
 cat <<EOF | tee config.toml
 [prompt]
