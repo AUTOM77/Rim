@@ -3,8 +3,8 @@ name: ci
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   CARGO_TERM_COLOR: always
-  CARGO_LOCA: "rimc-cli/Cargo.toml"
-  CARGO_BIN: "rimc"
+  CARGO_LOCA: "rim-cli/Cargo.toml"
+  CARGO_BIN: "rim"
 
 permissions:
   contents: write
@@ -15,7 +15,7 @@ on:
     branches:
       - "main"
     paths:
-      - "rimc-cli/Cargo.toml"
+      - "rim-cli/Cargo.toml"
 
 jobs:
   pre:

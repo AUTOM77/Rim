@@ -1,12 +1,13 @@
 [package]
-name = "rimc-cli"
-version = "0.1.0"
+name = "rim-cli"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-librimc = { path = "../rimc" }
+librim = { path = "../rim" }
 clap = { version= "4.5.4", features=["derive"] }
+toml = { version = "0.8.12"}
 
 [[bin]]
-name = "rimc"
+name = "rim"
 path = "src/cli.rs"

@@ -1,28 +1,28 @@
-# Rimc
+# Rim
 
-[![CI Status](https://github.com/AUTOM77/Rimc/workflows/ci/badge.svg)](https://github.com/AUTOM77/Rimc/actions?query=workflow:ci)
-[![Code Size](https://img.shields.io/github/languages/code-size/AUTOM77/Rimc)](.)
+[![CI Status](https://github.com/AUTOM77/Rim/workflows/ci/badge.svg)](https://github.com/AUTOM77/Rim/actions?query=workflow:ci)
+[![Code Size](https://img.shields.io/github/languages/code-size/AUTOM77/Rim)](.)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
-[![Open Issues](https://img.shields.io/github/issues/AUTOM77/Rimc)](https://github.com/AUTOM77/Rimc/issues)
+[![Open Issues](https://img.shields.io/github/issues/AUTOM77/Rim)](https://github.com/AUTOM77/Rim/issues)
 
-> Rimc, a Rust based Multi-Modal Hyper Caption Tool in Parallel
+> Rim, a Rust based Multi-Modal Hyper Caption Tool in Parallel
 
 ### Usage
 
 1. **Single Image/Video Captioning:**
 
 ```bash
-rimc -f ${file_path} -c `config.toml`
+rim -f ${file_path} -c `config.toml`
 ```
-Rimc generates a `*.txt` file containing the caption for a single image or video.
+Rim generates a `*.txt` file containing the caption for a single image or video.
 
 2. **Batch Image/Video Captioning:**
 
 ```bash
-rimc -d ${dir_path} -c `config.toml`
+rim -d ${dir_path} -c `config.toml`
 ```
 
-For a directory of images or videos, `Rimc` generates a corresponding list of `*.txt` caption files.
+For a directory of images or videos, `Rim` generates a corresponding list of `*.txt` caption files.
 
 3. Sample `config.toml` can be found in [config.toml](./config.toml)
 
