@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.37.0", features = ["full"] }
+base64 = { version = "0.22.0" }
 
 [lib]
 name = "librim"
