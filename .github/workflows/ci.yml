@@ -29,7 +29,7 @@ jobs:
   call:
     needs:
       - pre
-    uses: AUTOM77/Rust-Actions/.github/workflows/ci.yml@main
+    uses: AUTOM77/Rust-Actions/.github/workflows/ci_ffmpeg.yml@main
     with:
       cargo_loc: ${{ needs.pre.outputs.cargo_loc }}
       cargo_bin: ${{ needs.pre.outputs.cargo_bin }}
