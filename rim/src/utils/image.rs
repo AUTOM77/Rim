@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Read;
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _}; 
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+
 use tokio::fs::File as AsyncFile;
 use tokio::io::AsyncReadExt;
 
@@ -16,5 +17,6 @@ pub async fn async_base64(path: &str) -> Result<String, Box<dyn std::error::Erro
     let mut file = AsyncFile::open(path).await?;
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer).await?;
+
     Ok(BASE64.encode(buffer))
 }

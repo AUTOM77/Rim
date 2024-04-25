@@ -1,6 +1,6 @@
 use clap::{Args, Parser};
 use librim::client::RimClient;
-use librim::{async_single_cap, batch_cap};
+use librim::{single_cap, batch_cap};
 
 mod conf;
 
@@ -34,7 +34,7 @@ fn main() {
 
     let opt = &cli.opt;
     if let Some(file_path) = opt.file.as_deref() {
-        let _ = async_single_cap(file_path);
+        let _ = single_cap(file_path);
     } else if let Some(dir_path) = opt.dir.as_deref() {
         let _ = batch_cap(dir_path);
     }
