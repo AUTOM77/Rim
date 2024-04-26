@@ -5,8 +5,7 @@ pub mod client;
 use tokio;
 
 pub fn single_cap(f: &str) {
-    println!("Processing file: {:?} ", utils::video::_md5(f));
-    let _ = utils::video::processing(f, "./cache");
+    println!("Processing file: {:?} ", utils::image::_base64(f));
 }
 
 // pub fn async_single_cap(f: &str) {
