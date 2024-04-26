@@ -16,6 +16,7 @@ on:
       - "main"
     paths:
       - "rim-cli/Cargo.toml"
+      - ".github/workflows/ci.yml"
 
 jobs:
   pre:

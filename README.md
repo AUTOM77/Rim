@@ -48,3 +48,14 @@ keys = [
 ]
 EOF
 ```
+
+### Compile from source
+
+```bash
+sudo apt install -y --no-install-recommends clang curl pkg-config yasm nasm
+
+curl -fsSL https://sh.rustup.rs | sh -s -- -y
+rustup update nightly && rustup default nightly
+rustup component add rust-std-x86_64-unknown-linux-musl
+
+```
