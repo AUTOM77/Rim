@@ -1,9 +1,14 @@
 # Rim
 
-[![CI Status](https://github.com/AUTOM77/Rim/workflows/ci/badge.svg)](https://github.com/AUTOM77/Rim/actions?query=workflow:ci)
-[![Code Size](https://img.shields.io/github/languages/code-size/AUTOM77/Rim)](.)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
+[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/AUTOM77/Rim/ci.yml)](https://github.com/AUTOM77/Rim/actions)
+[![GitHub license](https://img.shields.io/github/license/AUTOM77/Rim)](./LICENSE)
+[![GitHub top language](https://img.shields.io/github/languages/top/AUTOM77/Rim?logo=rust&label=)](./rim-cli/Cargo.toml#L4)
 [![Open Issues](https://img.shields.io/github/issues/AUTOM77/Rim)](https://github.com/AUTOM77/Rim/issues)
+[![Code Size](https://img.shields.io/github/languages/code-size/AUTOM77/Rim)](.)
+[![GitHub contributors](https://img.shields.io/github/contributors/AUTOM77/Rim)](https://github.com/AUTOM77/Rim/graphs/contributors)
+[![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/m/AUTOM77/Rim)](https://github.com/AUTOM77/Rim/commits)  
+[![GitHub all releases](https://img.shields.io/github/downloads/AUTOM77/Rim/total?logo=github)](https://github.com/AUTOM77/Rim/releases)  
+[![GitHub release (with filter)](https://img.shields.io/github/v/release/AUTOM77/Rim?logo=github)](https://github.com/AUTOM77/Rim/releases)
 
 > Rim, a Rust based Multi-Modal Hyper Caption Tool in Parallel
 
