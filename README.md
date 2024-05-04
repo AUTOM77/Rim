@@ -30,7 +30,7 @@ For a directory of images or videos, `Rim` generates a corresponding list of `*.
 
 Creating a Sample Configuration (Unix):
 
-```bash
+```dash
 cat <<EOF | tee config.toml
 [prompt]
 value = "Caption this media"
@@ -47,4 +47,15 @@ keys = [
     "sk-00000000000000000000000000000001",
 ]
 EOF
+```
+
+### Nightly Build
+
+```dash
+curl -fsSL https://sh.rustup.rs | sh -s -- -y
+. "$HOME/.cargo/env"
+rustup update nightly && rustup default nightly
+cargo build --release
+
+./target/release/rim "assets/images" -c config.toml
 ```
