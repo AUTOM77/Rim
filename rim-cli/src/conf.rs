@@ -22,7 +22,7 @@ pub fn load(path: &str) -> Result<(String, Vec<String>, Vec<String>), Box<dyn st
         .as_array()
         .ok_or("Invalid type for 'gemini.keys'")?
         .iter()
-        .map(|value| value.as_str().unwrap().to_string()) // Assuming keys are strings
+        .map(|value| value.as_str().unwrap().to_string())
         .collect();
 
     let gpt4v_keys = toml_value
@@ -33,7 +33,7 @@ pub fn load(path: &str) -> Result<(String, Vec<String>, Vec<String>), Box<dyn st
         .as_array()
         .ok_or("Invalid type for 'gpt4v.keys'")?
         .iter()
-        .map(|value| value.as_str().unwrap().to_string()) // Assuming keys are strings
+        .map(|value| value.as_str().unwrap().to_string())
         .collect();
 
     Ok((prompt, gemini_keys, gpt4v_keys))

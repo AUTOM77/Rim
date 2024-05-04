@@ -1,5 +1,5 @@
-use super::model::google::Gemini;
-use super::model::openai::GPT;
+use super::llm::google::Gemini;
+use super::llm::openai::GPT;
 
 pub trait LLM {
     fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>>;
