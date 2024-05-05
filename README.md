@@ -56,11 +56,28 @@ EOF
 
 ### Nightly Build
 
-```dash
+```sh
 curl -fsSL https://sh.rustup.rs | sh -s -- -y
 . "$HOME/.cargo/env"
 rustup update nightly && rustup default nightly
-cargo build --release
 
+cargo build --release
+./target/release/rim "assets/images" -c config.toml
+```
+
+### Nightly Build with mirror
+```sh
+curl -fsSL https://sh.rustup.rs | sh -s -- -y
+. "$HOME/.cargo/env"
+echo """
+[source.crates-io]
+replace-with = 'mirror'
+
+[source.mirror]
+registry = "sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/"
+""" | tee -a ${CARGO_HOME:-$HOME/.cargo}/config.toml
+rustup update nightly && rustup default nightly
+
+cargo build --release
 ./target/release/rim "assets/images" -c config.toml
 ```
