@@ -74,8 +74,8 @@ echo """
 replace-with = 'mirror'
 
 [source.mirror]
-registry = "sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/"
-""" | tee -a ${CARGO_HOME:-$HOME/.cargo}/config.toml
+registry = 'sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/'
+""" | tee ${CARGO_HOME:-$HOME/.cargo}/config.toml
 rustup update nightly && rustup default nightly
 
 cargo build --release
