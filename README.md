@@ -20,6 +20,7 @@
 
 <details>
   <summary>Old Usage</summary>
+
     1. **Single Image/Video Captioning:**
 
     ```bash
