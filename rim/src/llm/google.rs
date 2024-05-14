@@ -1,13 +1,15 @@
+#[derive(Debug)]
 pub struct Gemini {
     prompt: String,
-    keys: Vec<String>,
+    key: String,
 }
 
 impl Gemini {
-    pub fn build(prompt: String, keys: Vec<String>) -> Self {
-        Self { prompt, keys }
+    pub fn new(prompt: String, key: String) -> Self {
+        Self { prompt, key }
     }
-    pub fn get_prompt(&self) -> &String{
-        &self.prompt
+
+    pub fn get_prompt(&self) -> String{
+        self.prompt.clone()
     }
 }

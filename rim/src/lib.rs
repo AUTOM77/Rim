@@ -1,8 +1,8 @@
-// pub mod llm;
+pub mod llm;
 // pub mod client;
 pub mod modality;
 pub use modality::Image;
-use tokio;
+use futures::StreamExt;
 
 // pub fn single_cap(f: &str) {
 //     let start_time = std::time::Instant::now();
@@ -42,29 +42,47 @@ use tokio;
 // }
 
 
-// pub fn single_cap(f: &str) {
-//     let start_time = std::time::Instant::now();
-//     println!("Processing file: {:?}", f);
+async fn caption(img: Image) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let _b64 = img._base64().await?;
+    let _ = img.save(_b64).await?;
 
-//     if let Ok(x) = _rt() {
-//         x.block_on(async {
-//             let _b64 = modality::image::async_base64(f.into()).await;
-//         });
-//     }
+    Ok(())
+}
 
-//     let elapsed_time = start_time.elapsed();
-//     println!("Processing time: {:?}", elapsed_time);
-// }
+async fn processing(images: Vec<Image>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let mut tasks = futures::stream::FuturesUnordered::new();
 
+    for img in images{
+        tasks.push(caption(img));
+    }
 
-async fn processing(imgs: Vec<Image>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    while let Some(handle) = tasks.next().await {
+        let res = match handle {
+            Ok(socket) => socket,
+            Err(e) => {
+                println!("Error {:#?}", e);
+                std::thread::sleep(tokio::time::Duration::from_millis(10));
+                continue;
+            }
+        };
+    }
+
     Ok(())
 }
 
 pub fn _rt(pth: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let mut images = Vec::new();
-    let i = modality::Image::from(pth)?;
-    images.push(i);
+    let mut images: Vec<_> = std::fs::read_dir(pth)
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|entry| entry.path().display().to_string())
+        .map(|f| Image::from(&f).unwrap())
+        .filter(|i| !i.existed())
+        .collect();
+
+    println!("{:?}", images);
+    // let mut images = Vec::new();
+    // let i = modality::Image::from(pth)?;
+    // images.push(i);
 
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     let _ = rt.block_on(processing(images));
