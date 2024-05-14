@@ -37,6 +37,8 @@ rim -d ${dir_path} -c `config.toml`
 For a directory of images or videos, `Rim` generates a corresponding list of `*.txt` caption files.
 </details>
 
+---
+
 1. Rim will now generates a folder called `xxx_cap` contains `*.txt` caption files.
 2. Sample `config.toml` can be found in [config.toml](./config.toml)
 
