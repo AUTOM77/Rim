@@ -21,19 +21,20 @@
 <details>
   <summary>Old Usage</summary>
 
-    1. **Single Image/Video Captioning:**
+1. **Single Image/Video Captioning:**
 
-    ```bash
-    rim -f ${file_path} -c `config.toml`
-    ```
-    Rim generates a `*.txt` file containing the caption for a single image or video.
+```bash
+rim -f ${file_path} -c `config.toml`
+```
+Rim generates a `*.txt` file containing the caption for a single image or video.
 
-    2. **Batch Image/Video Captioning:**
+2. **Batch Image/Video Captioning:**
 
-    ```bash
-    rim -d ${dir_path} -c `config.toml`
-    ```
-    For a directory of images or videos, `Rim` generates a corresponding list of `*.txt` caption files.
+```bash
+rim -d ${dir_path} -c `config.toml`
+```
+
+For a directory of images or videos, `Rim` generates a corresponding list of `*.txt` caption files.
 </details>
 
 1. Rim will now generates a folder called `xxx_cap` contains `*.txt` caption files.
