@@ -18,7 +18,8 @@ struct Cli {
     config: String,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let start_time = std::time::Instant::now();
     let cli = Cli::parse();
 
     let (prompt, gemini_keys, _) = conf::load(&cli.config).expect("Failed to decode TOML config");
@@ -26,14 +27,9 @@ fn main() {
     let opt = &cli.opt;
 
     if let Some(path) = opt._in.as_deref() {
-        let _pth = std::path::PathBuf::from(&path);
-
-        if _pth.is_file() {
-            let _ = librim::single_cap(path);
-        } else if _pth.is_dir(){
-            let _ = librim::batch_cap(path);
-        } else {
-            eprintln!("Invalid input: neither a file nor a directory.");
-        }
+        let _ = librim::_rt(path);
     }
+    println!("Processing time: {:?}", start_time.elapsed());
+    Ok(())
 }
+
