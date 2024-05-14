@@ -1,49 +1,75 @@
-use super::llm::google::Gemini;
-use super::llm::openai::GPT;
+use crate::llm::Gemini;
+use crate::llm::GPT;
 
-pub trait LLM {
-    fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>>;
-    fn log_prompt(&self) -> &String;
-}
+use reqwest::header::{HeaderMap, AUTHORIZATION};
 
-impl LLM for Gemini {
-    fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>> {
-        Ok("Gemini Caption".to_string())
-    }
-    
-    fn log_prompt(&self) -> &String{
-        &self.get_prompt()
-    }
-}
-
-impl LLM for GPT {
-    fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>> {
-        Ok("GPT4V Caption".to_string()) 
-    }
-    fn log_prompt(&self) -> &String{
-        &self.get_prompt()
-    }
-}
-
+#[derive(Debug)]
 pub struct RimClient {
-    client: Box<dyn LLM>, 
+    model: Gemini,
 }
 
 impl RimClient {
-    pub fn build(client_type: &str, prompt: String, keys: Vec<String>) -> Self {
-        let client: Box<dyn LLM> = match client_type {
-            "gemini" => Box::new(Gemini::build(prompt, keys)),
-            "gpt" => Box::new(GPT::build(prompt, keys)),
-            _ => panic!("Invalid client type"),
-        };
-        Self { client }
+    pub fn new(model: Gemini) -> Self {
+        Self { model }
     }
 
-    pub fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>> {
-        self.client.generate_caption()
+    pub fn build(prompt: String, key: String) -> Self {
+        let model = Gemini::build(prompt, key);
+        Self::new(model)
     }
-    
+
+    pub async fn generate_caption(&self, content: String) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        Ok("GPT4V Caption".to_string())
+    }
+
     pub fn log_prompt(&self) {
-        println!("Prompt: {}", self.client.log_prompt());
+        println!("Prompt: {}", self.model.get_prompt());
     }
 }
+
+// pub trait LLM {
+//     fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>>;
+//     fn log_prompt(&self) -> &String;
+// }
+
+// impl LLM for Gemini {
+//     fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>> {
+//         Ok("Gemini Caption".to_string())
+//     }
+
+//     fn log_prompt(&self) -> &String{
+//         &self.get_prompt()
+//     }
+// }
+
+// impl LLM for GPT {
+//     fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>> {
+//         Ok("GPT4V Caption".to_string())
+//     }
+//     fn log_prompt(&self) -> &String{
+//         &self.get_prompt()
+//     }
+// }
+
+// pub struct RimClient {
+//     client: Box<dyn LLM>,
+// }
+
+// impl RimClient {
+//     pub fn build(client_type: &str, prompt: String, keys: Vec<String>) -> Self {
+//         let client: Box<dyn LLM> = match client_type {
+//             "gemini" => Box::new(Gemini::build(prompt, keys)),
+//             "gpt" => Box::new(GPT::build(prompt, keys)),
+//             _ => panic!("Invalid client type"),
+//         };
+//         Self { client }
+//     }
+
+//     pub fn generate_caption(&self) -> Result<String, Box<dyn std::error::Error>> {
+//         self.client.generate_caption()
+//     }
+
+//     pub fn log_prompt(&self) {
+//         println!("Prompt: {}", self.client.log_prompt());
+//     }
+// }

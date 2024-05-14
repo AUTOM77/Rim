@@ -14,6 +14,17 @@ pub fn load(path: &str) -> Result<(String, Vec<String>, Vec<String>), Box<dyn st
         .ok_or("Invalid type for 'prompt'")?
         .to_string();
 
+    // let prompts = toml_value
+    //     .get("prompt")
+    //     .ok_or("Missing 'prompt' table in TOML")?
+    //     .get("value")
+    //     .ok_or("Missing 'value' key ")?
+    //     .as_array()
+    //     .ok_or("Invalid type for 'prompt'")?
+    //     .iter()
+    //     .map(|value| value.as_str().unwrap().to_string())
+    //     .collect();
+
     let gemini_keys = toml_value
         .get("gemini")
         .ok_or("Missing 'gemini' table in TOML")?

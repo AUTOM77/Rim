@@ -24,7 +24,7 @@ impl Image {
         let _root = local
             .parent()
             .ok_or("No parent directory found")?;
-        let root = PathBuf::from(format!("{}_caption", _root.display()));
+        let root = PathBuf::from(format!("{}_cap", _root.display()));
         Ok(Self::new(root, local))
     }
 

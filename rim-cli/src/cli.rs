@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = &cli.opt;
 
     if let Some(path) = opt._in.as_deref() {
-        let _ = librim::_rt(path);
+        let _ = librim::_rt(path, gemini_keys, prompt);
     }
     println!("Processing time: {:?}", start_time.elapsed());
     Ok(())
