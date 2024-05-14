@@ -14,22 +14,29 @@
 
 ### Usage
 
-1. **Single Image/Video Captioning:**
+> [!TIP]
+> `Rim` now combine Single and Batch Caption into one commandline <br/>
+> Use `rim ${path} -c config.toml` instead.
 
-```bash
-rim -f ${file_path} -c `config.toml`
-```
-Rim generates a `*.txt` file containing the caption for a single image or video.
+<details>
+  <summary>Old Usage</summary>
+    1. **Single Image/Video Captioning:**
 
-2. **Batch Image/Video Captioning:**
+    ```bash
+    rim -f ${file_path} -c `config.toml`
+    ```
+    Rim generates a `*.txt` file containing the caption for a single image or video.
 
-```bash
-rim -d ${dir_path} -c `config.toml`
-```
+    2. **Batch Image/Video Captioning:**
 
-For a directory of images or videos, `Rim` generates a corresponding list of `*.txt` caption files.
+    ```bash
+    rim -d ${dir_path} -c `config.toml`
+    ```
+    For a directory of images or videos, `Rim` generates a corresponding list of `*.txt` caption files.
+</details>
 
-3. Sample `config.toml` can be found in [config.toml](./config.toml)
+1. Rim will now generates a folder called `xxx_cap` contains `*.txt` caption files.
+2. Sample `config.toml` can be found in [config.toml](./config.toml)
 
 ### Config
 
