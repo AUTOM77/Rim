@@ -1,45 +1,8 @@
 pub mod llm;
 pub mod client;
 pub mod modality;
+
 use futures::StreamExt;
-
-// pub fn single_cap(f: &str) {
-//     let start_time = std::time::Instant::now();
-//     println!("Processing file: {:?}", f);
-
-//     if let Ok(x) = _rt() {
-//         x.block_on(async {
-//             let _b64 = modality::image::async_base64(f.into()).await;
-//         });
-//     }
-
-//     let elapsed_time = start_time.elapsed();
-//     println!("Processing time: {:?}", elapsed_time);
-// }
-
-// pub fn batch_cap(d: &str) {
-//     let start_time = std::time::Instant::now();
-//     println!("Processing directory: {:?}", d);
-
-//     let rt = tokio::runtime::Runtime::new().unwrap();
-
-//     rt.block_on(async {
-//         let mut tasks: Vec<_> = std::fs::read_dir(d)
-//             .unwrap()
-//             .filter_map(Result::ok)
-//             .map(|entry| entry.path())
-//             .filter(|path| path.extension().unwrap_or_default() == "png")
-//             .map(|f| tokio::spawn(async move { modality::image::async_base64_log(f).await; }))
-//             .collect();
-//         for task in tasks {
-//             task.await.unwrap();
-//         }
-//     });
-
-//     let elapsed_time = start_time.elapsed();
-//     println!("Processing time: {:?}", elapsed_time);
-// }
-
 
 async fn caption(img: modality::Image, clt: &client::RimClient) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let _b64 = img._base64().await?;
@@ -82,7 +45,7 @@ pub fn _rt(pth: &str, keys: Vec<String>, prompt: String) -> Result<(), Box<dyn s
         clients.push(_client);
     }
 
-    let mut images: Vec<modality::Image> = std::fs::read_dir(pth)
+    let images: Vec<modality::Image> = std::fs::read_dir(pth)
         .unwrap()
         .filter_map(Result::ok)
         .map(|entry| entry.path().display().to_string())

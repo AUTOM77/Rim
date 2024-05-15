@@ -18,8 +18,22 @@ impl RimClient {
         Self::new(model)
     }
 
-    pub async fn generate_caption(&self, content: String) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        Ok("GPT4V Caption".to_string())
+    pub async fn generate_caption(&self, data: String) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let api = self.model.get_api();
+        let payload = self.model.payload(data);
+
+        let client = reqwest::Client::builder()
+            .pool_idle_timeout(tokio::time::Duration::from_secs(1))
+            .build()?;
+        let response = client.post(api)
+            .json(&payload)
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        let raw = &response["candidates"][0]["content"]["parts"][0]["text"];
+        Ok(raw.to_string())
     }
 
     pub fn log_prompt(&self) {
