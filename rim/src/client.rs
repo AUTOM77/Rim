@@ -32,7 +32,7 @@ impl RimClient {
             .json::<serde_json::Value>()
             .await?;
 
-        let raw = &response["candidates"][0]["content"]["parts"][0]["text"];
+        let raw = &response["candidates"][0]["content"]["parts"][0]["text"].as_str().unwrap();
         Ok(raw.to_string())
     }
 
