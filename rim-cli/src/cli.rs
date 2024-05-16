@@ -4,18 +4,21 @@ use clap::{Args, Parser};
 use librim;
 
 #[derive(Args)]
-#[group(required = true, multiple = false)]
+#[group(required = false, multiple = true)]
 struct Opts {
-    _in: Option<String>,
+    #[arg(long, name = "LIMIT", help = "QPS limit num")]
+    limit: Option<usize>,
 }
 
 #[derive(Parser)]
 struct Cli {
-    #[command(flatten)]
-    opt: Opts,
+    _in: String,
 
     #[arg(short = 'c', long, name = "CONFIG")]
     config: String,
+
+    #[command(flatten)]
+    opt: Opts,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,12 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     let (prompt, gemini_keys, _) = conf::load(&cli.config).expect("Failed to decode TOML config");
+    let _ = librim::_rt(&cli._in, gemini_keys, prompt, cli.opt.limit);
 
-    let opt = &cli.opt;
-
-    if let Some(path) = opt._in.as_deref() {
-        let _ = librim::_rt(path, gemini_keys, prompt);
-    }
     println!("Processing time: {:?}", start_time.elapsed());
     Ok(())
 }

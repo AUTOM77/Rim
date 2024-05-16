@@ -16,7 +16,7 @@
 
 > [!TIP]
 > `Rim` now combine Single and Batch Caption into one commandline <br/>
-> Use `rim ${path} -c config.toml` instead.
+> Use `rim ${path} -c config.toml --limit 5` instead.
 
 <details>
   <summary>Old Usage</summary>

@@ -45,7 +45,7 @@ async fn processing(
     Ok(())
 }
 
-pub fn _rt(pth: &str, keys: Vec<String>, prompt: String) -> Result<(), Box<dyn std::error::Error>> {
+pub fn _rt(pth: &str, keys: Vec<String>, prompt: String, limit: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clients = Vec::new();
 
     for key in keys {
@@ -68,8 +68,10 @@ pub fn _rt(pth: &str, keys: Vec<String>, prompt: String) -> Result<(), Box<dyn s
     // let mut images = Vec::new();
     // let i = modality::modality::Image::from(pth)?;
     // images.push(i);
-
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
-    let _ = rt.block_on(processing(images, clients, 5));
+    match limit {
+        Some(n) => rt.block_on(processing(images, clients, n));
+        None => rt.block_on(processing(images, clients, 5));
+    }
     Ok(())
 }
