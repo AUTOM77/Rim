@@ -22,18 +22,34 @@ impl RimClient {
         let api = self.model.get_api();
         let payload = self.model.payload(data);
 
-        let client = reqwest::Client::builder()
-            .pool_idle_timeout(tokio::time::Duration::from_secs(1))
-            .build()?;
-        let response = client.post(api)
+        let client = reqwest::Client::builder().build()?;
+
+        let response = client
+            .post(api)
             .json(&payload)
             .send()
-            .await?
-            .json::<serde_json::Value>()
             .await?;
 
-        let raw = &response["candidates"][0]["content"]["parts"][0]["text"].as_str().unwrap();
+        if !response.status().is_success() {
+            println!("{:?}", response);
+            return Err(format!("API request failed with status code: {}", response.status()).into());
+        }
+
+        let json: serde_json::Value = response.json().await?;
+        let raw = json
+            .get("candidates")
+            .and_then(|candidates| candidates.get(0))
+            .and_then(|candidate| candidate.get("content"))
+            .and_then(|content| content.get("parts"))
+            .and_then(|parts| parts.get(0))
+            .and_then(|part| part.get("text"))
+            .and_then(|text| text.as_str())
+            .ok_or_else(|| "Missing or invalid response data".to_string())?;
         Ok(raw.to_string())
+    }
+
+    pub fn log_api(&self) {
+        println!("API: {}", self.model.get_api());
     }
 
     pub fn log_prompt(&self) {

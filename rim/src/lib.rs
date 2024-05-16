@@ -4,33 +4,35 @@ pub mod modality;
 
 use futures::StreamExt;
 
-async fn caption(img: modality::Image, clt: &client::RimClient) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let _b64 = img._base64().await?;
-    let _cap = clt.generate_caption(_b64).await?;
-    let _ = img.save(_cap).await?;
+async fn caption(img: &modality::Image, clt: &client::RimClient) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    clt.log_api();
+    // let _b64 = img._base64().await?;
+    // let _cap = clt.generate_caption(_b64).await?;
+    // let _ = img.save(_cap).await?;
     Ok(())
 }
 
-async fn processing(images: Vec<modality::Image>, clients: Vec<client::RimClient>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn processing(images: Vec<modality::Image>, clients: Vec<client::RimClient>, limit: usize) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut tasks = futures::stream::FuturesUnordered::new();
+    let mut num = 0;
     let total = clients.len();
 
-    for (i, img) in images.into_iter().enumerate() {
-        let clt = &clients[i % total];
-        tasks.push(caption(img, clt));
-    }
+    for chunk in images.chunks(limit) {
+        for img in chunk{
+            let clt = &clients[num % total];
+            tasks.push(caption(img, clt));
+            num+=1;
+        }
 
-    while let Some(handle) = tasks.next().await {
-        let res = match handle {
-            Ok(socket) => socket,
-            Err(e) => {
-                println!("Error {:#?}", e);
-                std::thread::sleep(tokio::time::Duration::from_millis(10));
-                continue;
-            }
-        };
+        while let Some(handle) = tasks.next().await {
+            match handle {
+                Ok(_) => eprintln!("Success: {:?}", num),
+                Err(e) => eprintln!("Task failed: {:?}", e),
+            };
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        tasks.clear();
     }
-
     Ok(())
 }
 
@@ -59,6 +61,6 @@ pub fn _rt(pth: &str, keys: Vec<String>, prompt: String) -> Result<(), Box<dyn s
     // images.push(i);
 
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
-    let _ = rt.block_on(processing(images, clients));
+    let _ = rt.block_on(processing(images, clients, 5));
     Ok(())
 }
