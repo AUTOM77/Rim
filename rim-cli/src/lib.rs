@@ -1,7 +1,7 @@
 use toml::Value;
 use std::fs;
 
-pub fn load(path: &str) -> Result<(String, Vec<String>, Vec<String>), Box<dyn std::error::Error>> {
+pub fn parse(path: &str) -> Result<(String, Vec<String>, Vec<String>), Box<dyn std::error::Error>> {
     let toml_str = fs::read_to_string(path)?;
     let toml_value: Value = toml::from_str(&toml_str)?;
 
