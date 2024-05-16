@@ -4,50 +4,59 @@ pub mod modality;
 
 use futures::StreamExt;
 
-async fn caption(img: &modality::Image, clt: &client::RimClient, idx:usize) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
+async fn caption(
+    img: &modality::Image,
+    clt: &client::RimClient,
+    idx: usize
+) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
     clt.log_api();
-    // let _b64 = img._base64().await?;
-    // let _cap = clt.generate_caption(_b64).await?;
-    // let _ = img.save(_cap).await?;
+    let _b64 = img._base64().await?;
+    let _cap = clt.generate_caption(_b64).await?;
+    let _ = img.save(_cap).await?;
     Ok(idx)
 }
 
-async fn processing(images: Vec<modality::Image>, clients: Vec<client::RimClient>, limit: usize) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn processing(
+    images: Vec<modality::Image>,
+    clients: Vec<client::RimClient>,
+    limit: usize
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut tasks = futures::stream::FuturesUnordered::new();
     let mut num = 0;
     let total = clients.len();
 
     for chunk in images.chunks(limit) {
-        for img in chunk{
+        for img in chunk {
             let clt = &clients[num % total];
             tasks.push(caption(img, clt, num));
-            num+=1;
+            num += 1;
         }
 
         while let Some(handle) = tasks.next().await {
             match handle {
                 Ok(i) => eprintln!("Success: {:?}", i),
                 Err(e) => eprintln!("Task failed: {:?}", e),
-            };
+            }
         }
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(30)).await;
         tasks.clear();
+        break;
     }
     Ok(())
 }
 
 pub fn _rt(pth: &str, keys: Vec<String>, prompt: String) -> Result<(), Box<dyn std::error::Error>> {
-
     let mut clients = Vec::new();
 
-    for key in keys{
+    for key in keys {
         let _prompt = prompt.clone();
         let _key = key.clone();
-        let _client= client::RimClient::build(_prompt, _key);
+        let _client = client::RimClient::build(_prompt, _key);
         clients.push(_client);
     }
 
-    let images: Vec<modality::Image> = std::fs::read_dir(pth)
+    let images: Vec<modality::Image> = std::fs
+        ::read_dir(pth)
         .unwrap()
         .filter_map(Result::ok)
         .map(|entry| entry.path().display().to_string())

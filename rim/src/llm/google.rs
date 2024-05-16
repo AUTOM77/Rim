@@ -15,7 +15,7 @@ impl Gemini {
     }
 
     pub fn build(prompt: String, key: String) -> Self {
-        let api = format!("{}{}", GEMINI_FLASH, key);
+        let api = format!("{}{}", GEMINI_PRO, key);
 
         Self::new(prompt, api)
     }
