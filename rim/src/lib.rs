@@ -70,8 +70,8 @@ pub fn _rt(pth: &str, keys: Vec<String>, prompt: String, limit: Option<usize>) -
     // images.push(i);
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     match limit {
-        Some(n) => rt.block_on(processing(images, clients, n));
-        None => rt.block_on(processing(images, clients, 5));
-    }
+        Some(n) => rt.block_on(processing(images, clients, n)),
+        None => rt.block_on(processing(images, clients, 5))
+    };
     Ok(())
 }

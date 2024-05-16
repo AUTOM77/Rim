@@ -11,3 +11,4 @@ librim = { path = "../rim" }
 [[bin]]
 name = "rim"
 path = "src/cli.rs"
+
