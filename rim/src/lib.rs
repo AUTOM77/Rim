@@ -38,9 +38,8 @@ async fn processing(
                 Err(e) => eprintln!("Task failed: {:?}", e),
             }
         }
-        tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         tasks.clear();
-        break;
     }
     Ok(())
 }
@@ -55,8 +54,7 @@ pub fn _rt(pth: &str, keys: Vec<String>, prompt: String, limit: Option<usize>) -
         clients.push(_client);
     }
 
-    let images: Vec<modality::Image> = std::fs
-        ::read_dir(pth)
+    let images: Vec<modality::Image> = std::fs::read_dir(pth)
         .unwrap()
         .filter_map(Result::ok)
         .map(|entry| entry.path().display().to_string())
