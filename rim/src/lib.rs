@@ -4,12 +4,12 @@ pub mod modality;
 
 use futures::StreamExt;
 
-async fn caption(img: &modality::Image, clt: &client::RimClient) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn caption(img: &modality::Image, clt: &client::RimClient, idx:usize) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
     clt.log_api();
     // let _b64 = img._base64().await?;
     // let _cap = clt.generate_caption(_b64).await?;
     // let _ = img.save(_cap).await?;
-    Ok(())
+    Ok(idx)
 }
 
 async fn processing(images: Vec<modality::Image>, clients: Vec<client::RimClient>, limit: usize) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -20,13 +20,13 @@ async fn processing(images: Vec<modality::Image>, clients: Vec<client::RimClient
     for chunk in images.chunks(limit) {
         for img in chunk{
             let clt = &clients[num % total];
-            tasks.push(caption(img, clt));
+            tasks.push(caption(img, clt, num));
             num+=1;
         }
 
         while let Some(handle) = tasks.next().await {
             match handle {
-                Ok(_) => eprintln!("Success: {:?}", num),
+                Ok(i) => eprintln!("Success: {:?}", i),
                 Err(e) => eprintln!("Task failed: {:?}", e),
             };
         }
