@@ -9,10 +9,20 @@ async fn caption(
     clt: &client::RimClient,
     idx: usize
 ) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
-    clt.log_api();
     let _b64 = img._base64().await?;
-    let _cap = clt.generate_caption(_b64).await?;
+    let mut retries = 0;
+    let _cap = loop {
+        match clt.generate_caption(_b64.clone()).await {
+            Ok(res) => break res,
+            Err(e) => {
+                println!("Retry {:#?} with {:?} times", idx, retries);
+                retries += 1;
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+            }
+        };
+    };
     let _ = img.save(_cap).await?;
+    clt.log_api();
     Ok(idx)
 }
 
@@ -38,7 +48,7 @@ async fn processing(
                 Err(e) => eprintln!("Task failed: {:?}", e),
             }
         }
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         tasks.clear();
     }
     Ok(())
@@ -62,6 +72,8 @@ pub fn _rt(pth: &str, keys: Vec<String>, prompt: String, limit: Option<usize>) -
         .filter(|i| !i.existed())
         .collect();
 
+    println!("Processing Media {:#?}", images.len());
+    std::thread::sleep(std::time::Duration::from_secs(1));
     // println!("{:?}", images);
     // let mut images = Vec::new();
     // let i = modality::modality::Image::from(pth)?;
@@ -69,7 +81,7 @@ pub fn _rt(pth: &str, keys: Vec<String>, prompt: String, limit: Option<usize>) -
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     match limit {
         Some(n) => rt.block_on(processing(images, clients, n)),
-        None => rt.block_on(processing(images, clients, 5))
+        None => rt.block_on(processing(images, clients, 1000))
     };
     Ok(())
 }
