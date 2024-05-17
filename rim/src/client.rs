@@ -31,7 +31,6 @@ impl RimClient {
             .await?;
 
         if !response.status().is_success() {
-            println!("{:?}", response);
             return Err(format!("API request failed with status code: {}", response.status()).into());
         }
 
