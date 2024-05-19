@@ -17,7 +17,7 @@ async fn caption(
             Err(e) => {
                 println!("Retry {:#?} with {:?} times", idx, retries);
                 retries += 1;
-                tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+                tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
             }
         };
     };
@@ -48,7 +48,7 @@ async fn processing(
                 Err(e) => eprintln!("Task failed: {:?}", e),
             }
         }
-        tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
         tasks.clear();
     }
     Ok(())
