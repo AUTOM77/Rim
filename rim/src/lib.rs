@@ -12,12 +12,17 @@ async fn caption(
     let _b64 = img._base64().await?;
     let mut retries = 0;
     let _cap = loop {
+        tokio::time::sleep(tokio::time::Duration::from_micros(idx as u64)).await;
         match clt.generate_caption(_b64.clone()).await {
             Ok(res) => break res,
             Err(e) => {
                 println!("Retry {:#?} with {:?} times", idx, retries);
                 retries += 1;
-                tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+                tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
+                if retries > 10 {
+                    println!("Path: {:#?}", img.local);
+                    return Err(e);
+                }
             }
         };
     };

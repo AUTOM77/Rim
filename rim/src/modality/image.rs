@@ -5,8 +5,8 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Image {
-    root: PathBuf,
-    local: PathBuf,
+    pub root: PathBuf,
+    pub local: PathBuf,
 }
 
 impl Image {
