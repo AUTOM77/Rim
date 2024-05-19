@@ -48,7 +48,7 @@ async fn processing(
                 Err(e) => eprintln!("Task failed: {:?}", e),
             }
         }
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
         tasks.clear();
     }
     Ok(())

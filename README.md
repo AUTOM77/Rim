@@ -18,6 +18,8 @@
 > `Rim` now combine Single and Batch Caption into one commandline <br/>
 > Use `rim ${path} -c config.toml --limit 5` instead.
 
+For a single key on single project, we recommend using `rim ${path} -c config.toml --limit 360`.
+
 <details>
   <summary>Old Usage</summary>
 
