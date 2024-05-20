@@ -54,4 +54,8 @@ impl Image {
 
         std::fs::metadata(&caption_path).is_ok()
     }
+
+    pub fn log_file(&self) {
+        println!("File : {:#?}", self.local);
+    }
 }

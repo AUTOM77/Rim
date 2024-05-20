@@ -20,7 +20,7 @@ async fn caption(
                 retries += 1;
                 tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
                 if retries > 10 {
-                    println!("Path: {:#?}", img.local);
+                    println!("Failed Path: {:#?}", img.local);
                     return Err(e);
                 }
             }
@@ -28,6 +28,7 @@ async fn caption(
     };
     let _ = img.save(_cap).await?;
     clt.log_api();
+    img.log_file();
     Ok(idx)
 }
 
@@ -48,10 +49,10 @@ async fn processing(
         }
 
         while let Some(handle) = tasks.next().await {
-            match handle {
+            let _ = match handle {
                 Ok(i) => eprintln!("Success: {:?}", i),
                 Err(e) => eprintln!("Task failed: {:?}", e),
-            }
+            };
         }
         tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
         tasks.clear();

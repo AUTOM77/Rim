@@ -1,5 +1,9 @@
+const GEMINI_0514: &str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-preview-0514:generateContent?key=";
+const GEMINI_VISION: &str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-vision-001:generateContent?key=";
 const GEMINI_FLASH: &str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=";
 const GEMINI_PRO: &str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=";
+const GEMINI_EXP: &str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-experimental:generateContent?key=";
+const GEMINI: &str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=";
 
 use serde_json::json;
 
