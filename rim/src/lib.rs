@@ -10,15 +10,16 @@ async fn caption(
     idx: usize
 ) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
     let _b64 = img._base64().await?;
+    let _delay = (idx % 100) * 10;
     let mut retries = 0;
     let _cap = loop {
-        tokio::time::sleep(tokio::time::Duration::from_micros(idx as u64)).await;
+        tokio::time::sleep(tokio::time::Duration::from_micros(_delay as u64)).await;
         match clt.generate_caption(_b64.clone()).await {
             Ok(res) => break res,
             Err(e) => {
                 println!("Retry {:#?} with {:?} times", idx, retries);
                 retries += 1;
-                tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
+                tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
                 if retries > 10 {
                     println!("Failed Path: {:#?}", img.local);
                     return Err(e);
@@ -54,7 +55,7 @@ async fn processing(
                 Err(e) => eprintln!("Task failed: {:?}", e),
             };
         }
-        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(20)).await;
         tasks.clear();
     }
     Ok(())
