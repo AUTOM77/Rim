@@ -56,7 +56,7 @@ impl RimClient {
         Ok(raw.to_string())
     }
 
-    pub async fn upload_asset(&self, data: Vec<u8>, mime: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn gs_upload(&self, data: Vec<u8>, mime: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let api = self.model.get_api();
         // let payload = self.model.payload(data, mime);
 
@@ -69,8 +69,8 @@ impl RimClient {
         //     .and_then(|part| part.get("text"))
         //     .and_then(|text| text.as_str())
         //     .ok_or_else(|| "Missing or invalid response data".to_string())?;
-        let url  = "https://github.com/AUTOM77/Rim/raw/main/assets/videos/1.mp4".to_string();
-        Ok(url)
+        let gs_url  = "gs://cloud-samples-data/video/animals.mp4".to_string();
+        Ok(gs_url)
     }
 
     pub async fn delete_asset(&self, url: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

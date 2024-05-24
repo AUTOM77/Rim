@@ -12,7 +12,7 @@ async fn caption(
 ) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
     let _data = m.data().await?;
     let mime = m.get_mime();
-    let m_url = clt.upload_asset(_data, &mime).await?;
+    let m_url = clt.gs_upload(_data, &mime).await?;
     let _delay = (idx % 100) * 200;
     let mut retries = 0;
     let _cap = loop {
@@ -91,7 +91,7 @@ pub fn _rt(prj: String, key:String, prompt: String) -> Result<(), Box<dyn std::e
 
     let api = llm::google::VERTEX_FLASH.replace("${PROJECT}", &prj);
     let mime = "video/mp4";
-    let fileUrl = "https://github.com/AUTOM77/Rim/raw/main/assets/videos/1.mp4";
+    let fileUrl = "gs://cloud-samples-data/video/animals.mp4";
 
     let payload = serde_json::json!({
         "contents": [
@@ -115,6 +115,16 @@ pub fn _rt(prj: String, key:String, prompt: String) -> Result<(), Box<dyn std::e
             .send()
             .await?;
         println!("{:#?}", response);
+        let json: serde_json::Value = response.json().await?;
+        let raw = json
+            .get("candidates")
+            .and_then(|candidates| candidates.get(0))
+            .and_then(|candidate| candidate.get("content"))
+            .and_then(|content| content.get("parts"))
+            .and_then(|parts| parts.get(0))
+            .and_then(|part| part.get("text"))
+            .and_then(|text| text.as_str());
+        println!("{:#?}", raw);
         Ok::<(), reqwest::Error>(())
     });
     // println!("{}, {}", api, auth);
