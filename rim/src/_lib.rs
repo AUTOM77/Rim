@@ -5,48 +5,47 @@ pub mod modality;
 use futures::StreamExt;
 
 async fn caption(
-    m: &modality::Media,
+    img: &modality::Image,
     clt: &client::RimClient,
     idx: usize
 ) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
-    let _data = m.data().await?;
-    let mime = m.get_mime();
-    let m_url = clt.upload_asset(_data, &mime).await?;
+    let _b64 = img._base64().await?;
     let _delay = (idx % 100) * 200;
     let mut retries = 0;
     let _cap = loop {
         tokio::time::sleep(tokio::time::Duration::from_millis(_delay as u64)).await;
-        match clt.generate_caption(m_url.clone(), mime.clone()).await {
+        match clt.generate_caption(_b64.clone()).await {
             Ok(res) => break res,
             Err(e) => {
                 println!("Retry {:#?} with {:?} times", idx, retries);
                 retries += 1;
                 tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
                 if retries > 10 {
-                    print!("Failed Path: {:#?}", m.log_file());
+                    println!("Failed Path: {:#?}", img.local);
                     return Err(e);
                 }
             }
         };
     };
-    let _ = m.save(_cap).await?;
+    let _ = img.save(_cap).await?;
     clt.log_api();
-    print!("Success Path: {:#?}", m.log_file());
+    img.log_file();
     Ok(idx)
 }
 
 async fn processing(
-    media: Vec<modality::Media>,
-    client: client::RimClient,
+    images: Vec<modality::Image>,
+    clients: Vec<client::RimClient>,
     limit: usize
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut tasks = futures::stream::FuturesUnordered::new();
     let mut num = 0;
+    let total = clients.len();
 
-    for chunk in media.chunks(limit) {
-        for m in chunk {
-            let clt = &client;
-            tasks.push(caption(m, clt, num));
+    for chunk in images.chunks(limit) {
+        for img in chunk {
+            let clt = &clients[num % total];
+            tasks.push(caption(img, clt, num));
             num += 1;
         }
 
@@ -62,23 +61,34 @@ async fn processing(
     Ok(())
 }
 
-pub fn _rt2(pth: &str, prj: String, key:String, prompt: String, limit: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
-    let client = client::RimClient::build(prompt, prj).with_auth(key);
+pub fn _rt(pth: &str, keys: Vec<String>, prompt: String, limit: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
+    let mut clients = Vec::new();
 
-    let media: Vec<modality::Media> = std::fs::read_dir(pth)
+    for key in keys {
+        let _prompt = prompt.clone();
+        let _key = key.clone();
+        let _client = client::RimClient::build(_prompt, _key);
+        clients.push(_client);
+    }
+
+    let images: Vec<modality::Image> = std::fs::read_dir(pth)
         .unwrap()
         .filter_map(Result::ok)
         .map(|entry| entry.path().display().to_string())
-        .map(|f| modality::Media::from(&f).unwrap())
+        .map(|f| modality::Image::from(&f).unwrap())
         .filter(|i| !i.existed())
         .collect();
-    
-    println!("Processing Media {:#?}", media.len());
+
+    println!("Processing Media {:#?}", images.len());
     std::thread::sleep(std::time::Duration::from_secs(1));
+    // println!("{:?}", images);
+    // let mut images = Vec::new();
+    // let i = modality::modality::Image::from(pth)?;
+    // images.push(i);
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     match limit {
-        Some(n) => rt.block_on(processing(media, client, n)),
-        None => rt.block_on(processing(media, client, 1000))
+        Some(n) => rt.block_on(processing(images, clients, n)),
+        None => rt.block_on(processing(images, clients, 1000))
     };
     Ok(())
 }

@@ -1,31 +1,40 @@
-use crate::llm::Gemini;
-use crate::llm::GPT;
+use crate::llm::Vertex;
+// use crate::llm::GPT;
 
 use reqwest::header::{HeaderMap, AUTHORIZATION};
 
 #[derive(Debug)]
 pub struct RimClient {
-    model: Gemini,
+    model: Vertex,
+    headers: HeaderMap,
 }
 
 impl RimClient {
-    pub fn new(model: Gemini) -> Self {
-        Self { model }
+    pub fn new(model: Vertex, headers: HeaderMap) -> Self {
+        Self { model, headers }
     }
 
-    pub fn build(prompt: String, key: String) -> Self {
-        let model = Gemini::build(prompt, key);
-        Self::new(model)
+    pub fn build(prompt: String, project: String) -> Self {
+        let model = Vertex::build(prompt, project);
+        let headers = HeaderMap::new();
+        Self::new(model, headers)
     }
 
-    pub async fn generate_caption(&self, data: String) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn with_auth(mut self, key: String) -> Self{
+        let auth = format!("Bearer {key}");
+        self.headers.insert(AUTHORIZATION, auth.parse().unwrap());
+        self
+    }
+
+    pub async fn generate_caption(&self, fileUrl: String, mime: String) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let api = self.model.get_api();
-        let payload = self.model.payload(data);
+        let payload = self.model.payload(fileUrl, mime);
 
         let client = reqwest::Client::builder().build()?;
 
         let response = client
             .post(api)
+            .headers(self.headers.clone())
             .json(&payload)
             .send()
             .await?;
@@ -45,6 +54,27 @@ impl RimClient {
             .and_then(|text| text.as_str())
             .ok_or_else(|| "Missing or invalid response data".to_string())?;
         Ok(raw.to_string())
+    }
+
+    pub async fn upload_asset(&self, data: Vec<u8>, mime: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let api = self.model.get_api();
+        // let payload = self.model.payload(data, mime);
+
+        // let raw = json
+        //     .get("candidates")
+        //     .and_then(|candidates| candidates.get(0))
+        //     .and_then(|candidate| candidate.get("content"))
+        //     .and_then(|content| content.get("parts"))
+        //     .and_then(|parts| parts.get(0))
+        //     .and_then(|part| part.get("text"))
+        //     .and_then(|text| text.as_str())
+        //     .ok_or_else(|| "Missing or invalid response data".to_string())?;
+        let url  = "https://github.com/AUTOM77/Rim/raw/main/assets/videos/1.mp4".to_string();
+        Ok(url)
+    }
+
+    pub async fn delete_asset(&self, url: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        Ok(())
     }
 
     pub fn log_api(&self) {

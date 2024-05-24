@@ -7,19 +7,14 @@ keys = [
     "AIza00000000000000000000000000000000001",
 ]
 
+[vertex]
+project = "prjt-001"
+key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
+
 [gpt4v]
 keys = [
     "sk-00000000000000000000000000000000",
     "sk-00000000000000000000000000000001",
 ]
 
-[vertex]
-projects = [
-    "prjt-001",
-    "prjt-002",
-]
 
-keys = [
-    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1",
-    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2",
-]

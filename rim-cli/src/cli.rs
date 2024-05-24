@@ -23,8 +23,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start_time = std::time::Instant::now();
     let cli = Cli::parse();
 
-    let (prompt, gemini_keys, _) = rim_cli::parse(&cli.config).expect("Failed to decode TOML config");
-    let _ = librim::_rt(&cli._in, gemini_keys, prompt, cli.opt.limit);
+    let (prompt, vertex_project, vertex_key, gemini_keys, _) = rim_cli::parse(&cli.config).expect("Failed to decode TOML config");
+    // let _ = librim::_rt(&cli._in, gemini_keys, prompt, cli.opt.limit);
+    let _ = librim::_rt2(&cli._in, vertex_project, vertex_key, prompt, cli.opt.limit);
 
     println!("Processing time: {:?}", start_time.elapsed());
     Ok(())

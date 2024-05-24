@@ -1,17 +1,18 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub struct Media {
-    pub root: PathBuf,
-    pub local: PathBuf,
+    root: PathBuf,
+    local: PathBuf,
+    mime: String
 }
 
 impl Media {
-    pub fn new(root: PathBuf, local:PathBuf) -> Self {
-        Self { root, local }
+    pub fn new(root: PathBuf, local:PathBuf, mime: String) -> Self {
+        Self { root, local, mime }
     }
 
     pub fn with_root(mut self, root: PathBuf) -> Self {
@@ -25,14 +26,19 @@ impl Media {
             .parent()
             .ok_or("No parent directory found")?;
         let root = PathBuf::from(format!("{}_cap", _root.display()));
-        Ok(Self::new(root, local))
+        let mime = match local.extension().unwrap().to_str() {
+            Some("png") => "image/png",
+            Some("mp4") => "video/mp4",
+            _ => "media/unkown",
+        };
+        Ok(Self::new(root, local, mime.to_string()))
     }
 
-    pub async fn _base64(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn data(&self) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
         let mut f = tokio::fs::File::open(&self.local).await?;
         let mut buffer = Vec::new();
         f.read_to_end(&mut buffer).await?;
-        Ok(BASE64.encode(buffer))
+        Ok(buffer)
     }
 
     pub async fn save(&self, cap: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -55,7 +61,11 @@ impl Media {
         std::fs::metadata(&caption_path).is_ok()
     }
 
-    pub fn log_file(&self) {
-        println!("File : {:#?}", self.local);
+    pub fn get_mime(&self) -> String{
+        self.mime.clone()
+    }
+
+    pub fn log_file(&self)  -> String {
+        self.local.display().to_string()
     }
 }
