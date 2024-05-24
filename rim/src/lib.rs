@@ -3,6 +3,7 @@ pub mod client;
 pub mod modality;
 
 use futures::StreamExt;
+use reqwest::header;
 
 async fn caption(
     m: &modality::Media,
@@ -62,7 +63,7 @@ async fn processing(
     Ok(())
 }
 
-pub fn _rt2(pth: &str, prj: String, key:String, prompt: String, limit: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn rt(pth: &str, prj: String, key:String, prompt: String, limit: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
     let client = client::RimClient::build(prompt, prj).with_auth(key);
 
     let media: Vec<modality::Media> = std::fs::read_dir(pth)
@@ -80,5 +81,42 @@ pub fn _rt2(pth: &str, prj: String, key:String, prompt: String, limit: Option<us
         Some(n) => rt.block_on(processing(media, client, n)),
         None => rt.block_on(processing(media, client, 1000))
     };
+    Ok(())
+}
+
+pub fn _rt(prj: String, key:String, prompt: String) -> Result<(), Box<dyn std::error::Error>> {
+    let auth = format!("Bearer {key}");
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(reqwest::header::AUTHORIZATION, auth.parse().unwrap());
+
+    let api = llm::google::VERTEX_FLASH.replace("${PROJECT}", &prj);
+    let mime = "video/mp4";
+    let fileUrl = "https://github.com/AUTOM77/Rim/raw/main/assets/videos/1.mp4";
+
+    let payload = serde_json::json!({
+        "contents": [
+            {
+                "role": "user",
+                "parts": [
+                    {"fileData": { "mimeType": mime, "fileUri": fileUrl } },
+                    {"text": prompt.clone()},
+                ]
+            }
+        ]
+    });
+
+    let client = reqwest::Client::builder().build()?;
+    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
+    rt.block_on(async {
+        let response = client
+            .post(api)
+            .headers(headers)
+            .json(&payload)
+            .send()
+            .await?;
+        println!("{:#?}", response);
+        Ok::<(), reqwest::Error>(())
+    });
+    // println!("{}, {}", api, auth);
     Ok(())
 }

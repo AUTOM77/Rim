@@ -10,7 +10,7 @@ const GEMINI_FILE: &str = "https://generativelanguage.googleapis.com/upload/v1be
 
 const VERTEX: &str = "https://{ZONE}-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/{ZONE}/publishers/google/models/${MODEL}:generateContent";
 const VERTEX_PRO: &str = "https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/us-central1/publishers/google/models/gemini-1.5-pro-preview-0514:generateContent";
-const VERTEX_FLASH: &str = "https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/us-central1/publishers/google/models/gemini-1.5-flash-preview-0514:generateContent";
+pub const VERTEX_FLASH: &str = "https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/us-central1/publishers/google/models/gemini-1.5-flash-preview-0514:generateContent";
 
 use serde_json::json;
 
@@ -93,7 +93,7 @@ impl Vertex {
     }
 
     pub fn build(prompt: String, project: String) -> Self {
-        let api = VERTEX_PRO.replace("{PROJECT}", &project);
+        let api = VERTEX_PRO.replace("${PROJECT}", &project);
         Self::new(prompt, api)
     }
 
