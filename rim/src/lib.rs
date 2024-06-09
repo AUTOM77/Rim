@@ -1,44 +1,41 @@
-pub mod llm;
 pub mod client;
-pub mod modality;
+pub mod media;
+
+pub use media::Media;
+pub use client::Service;
+use crate::client::base::API;
+use crate::media::MediaProcessor;
 
 use futures::StreamExt;
-use reqwest::header;
 
 async fn caption(
-    m: &modality::Media,
-    clt: &client::RimClient,
+    prompt: &str,
+    media: &Media,
+    clt: &Service,
     idx: usize
-) -> Result<usize, Box<dyn std::error::Error + Send + Sync>> {
-    let _data = m.data().await?;
-    let mime = m.get_mime();
-    let m_url = clt.gs_upload(_data, &mime).await?;
+) -> Result<(usize, String), Box<dyn std::error::Error + Send + Sync>> {
+    let images = media.process().await.unwrap();
     let _delay = (idx % 100) * 200;
     let mut retries = 0;
-    let _cap = loop {
+    let (caption, consumption) = loop {
         tokio::time::sleep(tokio::time::Duration::from_millis(_delay as u64)).await;
-        match clt.generate_caption(m_url.clone(), mime.clone()).await {
+        match clt.get_caption(prompt, images.clone()).await {
             Ok(res) => break res,
             Err(e) => {
-                println!("Retry {:#?} with {:?} times", idx, retries);
                 retries += 1;
-                tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
-                if retries > 10 {
-                    print!("Failed Path: {:#?}", m.log_file());
-                    return Err(e);
-                }
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                println!("Retry {retries} - {:#?}", e);
             }
         };
     };
-    let _ = m.save(_cap).await?;
-    clt.log_api();
-    print!("Success Path: {:#?}", m.log_file());
-    Ok(idx)
+    let _ = media.save_result(caption).await?;
+    Ok((idx, consumption))
 }
 
 async fn processing(
-    media: Vec<modality::Media>,
-    client: client::RimClient,
+    prompt: &str,
+    media: Vec<Media>,
+    clients: Vec<Service>,
     limit: usize
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut tasks = futures::stream::FuturesUnordered::new();
@@ -46,14 +43,14 @@ async fn processing(
 
     for chunk in media.chunks(limit) {
         for m in chunk {
-            let clt = &client;
-            tasks.push(caption(m, clt, num));
+            let clt = &clients[num % clients.len()];
+            tasks.push(caption(prompt, m, clt, num));
             num += 1;
         }
 
         while let Some(handle) = tasks.next().await {
             let _ = match handle {
-                Ok(i) => eprintln!("Success: {:?}", i),
+                Ok((i, c)) => eprintln!("Success: {:?}, Consumption: {}", i, c),
                 Err(e) => eprintln!("Task failed: {:?}", e),
             };
         }
@@ -63,70 +60,39 @@ async fn processing(
     Ok(())
 }
 
-pub fn rt(pth: &str, prj: String, key:String, prompt: String, limit: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
-    let client = client::RimClient::build(prompt, prj).with_auth(key);
+pub fn runtime(
+mut pth: std::path::PathBuf, 
+    conf: String, 
+    limit: Option<usize>, 
+    qps: Option<usize>
+) -> Result<(), Box<dyn std::error::Error>> {
+    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
+    if pth.is_file() {
+        let abs = std::fs::canonicalize(pth)?;
+        pth = std::path::PathBuf::from(abs).parent().unwrap().to_path_buf();
+    }
 
-    let media: Vec<modality::Media> = std::fs::read_dir(pth)
+    let client_config = conf.parse::<client::Config>()?;
+    let prompt = client_config.prompt();
+    let azure: Vec<Service> = client_config.get("azure")
+        .unwrap()
+        .into_iter()
+        .filter_map(|p| Service::from("azure", p.endpoint.clone(), p.key.clone(), p.model.clone()))
+        .collect();
+
+    let media: Vec<_> = std::fs::read_dir(pth)
         .unwrap()
         .filter_map(Result::ok)
-        .map(|entry| entry.path().display().to_string())
-        .map(|f| modality::Media::from(&f).unwrap())
-        .filter(|i| !i.existed())
+        .filter_map(|f| Media::from(f.path()))
+        .filter(|c| !c.is_processed() )
         .collect();
-    
-    println!("Processing Media {:#?}", media.len());
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
-    match limit {
-        Some(n) => rt.block_on(processing(media, client, n)),
-        None => rt.block_on(processing(media, client, 1000))
+
+    let limit_num = limit.unwrap_or(100);
+    let limit_media: Vec<Media> = media.into_iter().take(limit_num).collect();
+
+    match qps {
+        Some(n) => rt.block_on(processing(&prompt, limit_media, azure, n)),
+        None => rt.block_on(processing(&prompt, limit_media, azure, 30))
     };
-    Ok(())
-}
-
-pub fn _rt(prj: String, key:String, prompt: String) -> Result<(), Box<dyn std::error::Error>> {
-    let auth = format!("Bearer {key}");
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(reqwest::header::AUTHORIZATION, auth.parse().unwrap());
-
-    let api = llm::google::VERTEX_FLASH.replace("${PROJECT}", &prj);
-    let mime = "video/mp4";
-    let fileUrl = "gs://cloud-samples-data/video/animals.mp4";
-
-    let payload = serde_json::json!({
-        "contents": [
-            {
-                "role": "user",
-                "parts": [
-                    {"fileData": { "mimeType": mime, "fileUri": fileUrl } },
-                    {"text": prompt.clone()},
-                ]
-            }
-        ]
-    });
-
-    let client = reqwest::Client::builder().build()?;
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
-    rt.block_on(async {
-        let response = client
-            .post(api)
-            .headers(headers)
-            .json(&payload)
-            .send()
-            .await?;
-        println!("{:#?}", response);
-        let json: serde_json::Value = response.json().await?;
-        let raw = json
-            .get("candidates")
-            .and_then(|candidates| candidates.get(0))
-            .and_then(|candidate| candidate.get("content"))
-            .and_then(|content| content.get("parts"))
-            .and_then(|parts| parts.get(0))
-            .and_then(|part| part.get("text"))
-            .and_then(|text| text.as_str());
-        println!("{:#?}", raw);
-        Ok::<(), reqwest::Error>(())
-    });
-    // println!("{}, {}", api, auth);
     Ok(())
 }

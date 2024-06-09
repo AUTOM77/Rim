@@ -10,13 +10,13 @@
 [![GitHub all releases](https://img.shields.io/github/downloads/AUTOM77/Rim/total?logo=github)](https://github.com/AUTOM77/Rim/releases)  
 [![GitHub release (with filter)](https://img.shields.io/github/v/release/AUTOM77/Rim?logo=github)](https://github.com/AUTOM77/Rim/releases)
 
-> Rim, a Rust based Multi-Modal Hyper Caption Tool in Parallel
+> Rim, a Rust based Multi-Modal Hyper Caption Tool in Parallel, v3.0 released!
 
 ### Usage
 
 > [!TIP]
 > `Rim` now combine Single and Batch Caption into one commandline <br/>
-> Use `rim ${path} -c config.toml --limit 5` instead.
+> Use `rim ${path} -c config.toml --limit 10 --qps 10` instead.
 
 For a single key on single project, we recommend using `rim ${path} -c config.toml --limit 360`.
 
@@ -51,22 +51,18 @@ Creating a Sample Configuration (Unix):
 ```dash
 cat <<EOF | tee config.toml
 [prompt]
-value = "Caption this media"
+value = "Caption this video"
 
-[gemini]
-keys = [
-    "AIza00000000000000000000000000000000000",
-    "AIza00000000000000000000000000000000001",
+[azure]
+api = [
+    ['https://closedAI-1.openai.azure.com', 'sk-00000000000000000000000000000000', 'gpt-4o'],
+    ['https://closedAI-2.openai.azure.com', 'sk-00000000000000000000000000000001', 'gpt-4v']
 ]
 
-[vertex]
-project = "prjt-001"
-key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
-
-[gpt4v]
-keys = [
-    "sk-00000000000000000000000000000000",
-    "sk-00000000000000000000000000000001",
+[gemini]
+api = [
+    ['https://generativelanguage.googleapis.com', 'AIza00000000000000000000000000000000000', 'gemini-1.5-flash-latest'],
+    ['https://generativelanguage.googleapis.com', 'AIza00000000000000000000000000000000001', 'gemini-1.5-pro-latest'],
 ]
 EOF
 ```

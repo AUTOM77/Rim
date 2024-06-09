@@ -1,20 +1,14 @@
 [prompt]
-value = "Caption this media"
+value = "Caption this video"
+
+[azure]
+api = [
+    ['https://closedAI-1.openai.azure.com', 'sk-00000000000000000000000000000000', 'gpt-4o'],
+    ['https://closedAI-2.openai.azure.com', 'sk-00000000000000000000000000000001', 'gpt-4v']
+]
 
 [gemini]
-keys = [
-    "AIza00000000000000000000000000000000000",
-    "AIza00000000000000000000000000000000001",
+api = [
+    ['https://generativelanguage.googleapis.com', 'AIza00000000000000000000000000000000000', 'gemini-1.5-flash-latest'],
+    ['https://generativelanguage.googleapis.com', 'AIza00000000000000000000000000000000001', 'gemini-1.5-pro-latest'],
 ]
-
-[vertex]
-project = "prjt-001"
-key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1"
-
-[gpt4v]
-keys = [
-    "sk-00000000000000000000000000000000",
-    "sk-00000000000000000000000000000001",
-]
-
-

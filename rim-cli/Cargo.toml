@@ -1,11 +1,10 @@
 [package]
 name = "rim-cli"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5.4", features = ["derive"] }
-toml = { version = "0.8.12" }
+clap = { version = "4.5.6", features = ["derive"] }
 librim = { path = "../rim" }
 
 [[bin]]
