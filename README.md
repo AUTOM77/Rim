@@ -15,8 +15,7 @@
 ### Usage
 
 > [!TIP]
-> `Rim` now combine Single and Batch Caption into one commandline <br/>
-> Use `rim ${path} -c config.toml --limit 10 --qps 10` instead.
+> `rim` $path -c `config.toml` --limit 100 --qps 20
 
 For a single key on single project, we recommend using `rim ${path} -c config.toml --limit 360`.
 
