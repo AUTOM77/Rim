@@ -12,46 +12,16 @@ on:
   push:
     branches:
       - "main"
+    paths:
+      - "rim-cli/Cargo.toml"
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up dependencies for Ubuntu
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get -qq update && sudo apt-get -qq install pkg-config yasm nasm musl-dev clang llvm
-
-      - name: Set up dependencies for macOS
-        if: matrix.os == 'macos-latest'
-        run: brew update && brew install pkg-config yasm nasm
-
-      - name: Set up dependencies for Windows
-        if: matrix.os == 'windows-latest'
-        run: choco install llvm nasm
-
-      - name: Install Rust
-        run: |
-          if [ $RUNNER_OS == 'Windows' ]; then
-            Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://sh.rustup.rs'))
-          else
-            curl -fsSL https://sh.rustup.rs | sh -s -- -y
-          fi
-        shell: bash
-
-      - name: Load Cargo environment
-        run: . "$HOME/.cargo/env"
-        shell: bash
-
-      - name: Update Rust to nightly
-        run: rustup update nightly && rustup default nightly
-        shell: bash
-
-      - name: Build the project
-        run: cargo build --release
-        shell: bash
+      - run: sudo apt-get -qq update && sudo apt-get -qq install pkg-config yasm nasm musl-dev clang llvm
+      - run: curl -fsSL https://sh.rustup.rs | sh -s -- -y
+      - run: . "$HOME/.cargo/env"
+      - run: rustup update nightly && rustup default nightly
+      - run: cargo build --release
