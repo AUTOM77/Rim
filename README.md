@@ -15,7 +15,8 @@
 ### Usage
 
 > [!TIP]
-> `rim` $path -c `config.toml` --limit 100 --qps 20
+> `rim` assets/images/1.png -c `config.toml` --limit 100 --qps 20
+> `rim` assets/videos/1.mp4 -c `config.toml` --limit 100 --qps 20
 
 For a single key on single project, we recommend using `rim ${path} -c config.toml --limit 360`.
 
