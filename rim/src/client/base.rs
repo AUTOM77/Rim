@@ -113,7 +113,7 @@ impl API for Azure {
         let image_content: Vec<serde_json::Value> = _base64
             .into_iter()
             .map(|_b64| format!("data:image/jpg;base64,{}", _b64))
-            .map(|image| json!({ "type": "image_url", "image_url": { "url": image , "detail": "low"}}))
+            .map(|image| json!({ "type": "image_url", "image_url": { "url": image }}))
             .collect();
 
         usr_content.push(text_content);
