@@ -1,5 +1,10 @@
-[prompt]
+[[prompt]]
+name = "simple"
 value = "Caption this video"
+
+[[prompt]]
+name = "example"
+value = "Provide a brief summary of the video content focusing on key themes and messages."
 
 [azure]
 api = [

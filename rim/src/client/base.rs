@@ -4,6 +4,7 @@ use serde_json::json;
 pub trait API {
     fn get_headers(&self) -> HeaderMap;
     fn get_url(&self) -> String;
+    fn current_model(&self) -> &str;
     fn get_payload(&self, user_prompt: &str, _base64: Vec<String>) -> serde_json::Value;
     fn parse_response(&self, response: serde_json::Value) -> Result<String, Box<dyn std::error::Error>>;
     fn parse_consumption(&self, response: serde_json::Value) -> Result<String, Box<dyn std::error::Error>>;
@@ -49,6 +50,13 @@ impl Service {
         }
     }
 
+    pub fn current_model(&self) -> &str {
+        match self {
+            Service::Azure(azure) => azure.current_model(),
+            Service::Gemini(gemini) => gemini.current_model(),
+        }
+    }
+
     pub async fn get_caption(&self, user_prompt: &str, images_base64: Vec<String>) -> Result<(String, String), Box<dyn std::error::Error>> {
         match self {
             Service::Azure(azure) => azure.get_caption(user_prompt, images_base64).await,
@@ -81,6 +89,10 @@ impl Azure {
 }
 
 impl API for Azure {
+    fn current_model(&self) -> &str {
+        &self.model
+    }
+
     fn get_headers(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
@@ -151,6 +163,10 @@ impl Gemini {
 }
 
 impl API for Gemini {
+    fn current_model(&self) -> &str {
+        &self.model
+    }
+
     fn get_headers(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());

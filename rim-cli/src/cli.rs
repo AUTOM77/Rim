@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     {
         let cli = Cli::parse();
         let conf_str = std::fs::read_to_string(&cli.config)?;
-        let _ = librim::runtime(
+        let _ = librim::interface(
             cli.pth.into(),
             conf_str, 
             cli.opt.limit, 

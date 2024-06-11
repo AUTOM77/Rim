@@ -1,5 +1,8 @@
 use std::str::FromStr;
 use std::collections::HashMap;
+use std::fmt;
+
+const SUPPORTED_PROVIDERS: &[&str] = &["azure", "gemini"];
 
 #[derive(Debug)]
 pub struct Provider {
@@ -8,9 +11,15 @@ pub struct Provider {
     pub model: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct Prompt {
+    pub name: String,
+    pub value: String,
+}
+
 #[derive(Debug)]
 pub struct Config {
-    _prompt: String,
+    prompts: Vec<Prompt>,
     providers: HashMap<String, Vec<Provider>>,
 }
 
@@ -19,24 +28,38 @@ impl FromStr for Config {
 
     fn from_str(toml_str: &str) -> Result<Self, Self::Err> {
         let toml_value: toml::Value = toml::from_str(toml_str)?;
+        let mut prompts = Vec::new();
 
-        let _prompt = toml_value
-            .get("prompt")
-            .ok_or("Missing 'prompt' key in TOML")?
-            .get("value")
-            .ok_or("Missing 'value' key in 'prompt'")?
-            .as_str()
-            .ok_or("Invalid type for 'prompt' value")?
-            .to_string();
+        if let Some(prompt_entries) = toml_value.get("prompt").and_then(|p| p.as_array()) {
+            for prompt_entry in prompt_entries {
+                if let Some(prompt_table) = prompt_entry.as_table() {
+                    let name = prompt_table
+                        .get("name")
+                        .ok_or("Missing 'name' key in 'prompt'")?
+                        .as_str()
+                        .ok_or("Invalid type for 'prompt.name'")?
+                        .to_string();
+
+                    let value = prompt_table
+                        .get("value")
+                        .ok_or("Missing 'value' key in 'prompt'")?
+                        .as_str()
+                        .ok_or("Invalid type for 'prompt.value'")?
+                        .to_string();
+
+                    prompts.push(Prompt { name, value });
+                } else {
+                    return Err("Invalid 'prompt' entry".into());
+                }
+            }
+        }
 
         let mut providers = HashMap::new();
         let mut found_valid_provider = false;
 
-        for key in toml_value.as_table().ok_or("Invalid TOML structure")?.keys() {
-            if key == "azure" || key == "gemini" {
-                let provider_list = toml_value
-                    .get(key)
-                    .ok_or(format!("Missing '{}' table in TOML", key))?
+        for &key in SUPPORTED_PROVIDERS {
+            if let Some(provider_table) = toml_value.get(key) {
+                let provider_list = provider_table
                     .get("api")
                     .ok_or(format!("Missing 'api' key in '{}' table", key))?
                     .as_array()
@@ -57,7 +80,7 @@ impl FromStr for Config {
                 if !provider_list.is_empty() {
                     found_valid_provider = true;
                 }
-                providers.insert(key.clone(), provider_list);
+                providers.insert(key.to_string(), provider_list);
             }
         }
 
@@ -65,16 +88,34 @@ impl FromStr for Config {
             return Err("At least one of 'azure' or 'gemini' configurations must be valid".into());
         }
 
-        Ok(Config { _prompt, providers })
+        Ok(Config { prompts, providers })
     }
 }
 
 impl Config {
-    pub fn prompt(&self) -> &str {
-        &self._prompt
+    pub fn prompts(&self) -> Vec<Prompt> {
+        self.prompts.clone()
     }
 
     pub fn get(&self, provider: &str) -> Option<&Vec<Provider>> {
         self.providers.get(provider)
+    }
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Config:")?;
+        writeln!(f, "  Prompts:")?;
+        for prompt in &self.prompts {
+            writeln!(f, "    - Name: {}, Value: {}", prompt.name, prompt.value)?;
+        }
+        writeln!(f, "  Providers:")?;
+        for (provider_key, providers) in &self.providers {
+            writeln!(f, "    - Provider: {}", provider_key)?;
+            for provider in providers {
+                writeln!(f, "      - Endpoint: {}, Key: {}, Model: {}", provider.endpoint, provider.key, provider.model)?;
+            }
+        }
+        Ok(())
     }
 }

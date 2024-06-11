@@ -7,16 +7,21 @@ use std::path::PathBuf;
 pub trait MediaProcessor {
     fn path(&self) -> &PathBuf;
     async fn process(&self) -> Result<Vec<String>, Box<dyn std::error::Error>>;
-    fn get_save_path(&self) -> PathBuf {
+    fn get_save_path(&self, model: &str, prompt: &str) -> PathBuf {
         let mut local = self.path().clone();
+        local.pop();
+        local.push(model);
+        local.push(prompt);
+        let _ = std::fs::create_dir_all(&local);
+        local.push(self.path().file_name().unwrap());
         local.set_extension("txt");
         local
     }
-    fn is_processed(&self) -> bool {
-        std::fs::metadata(self.get_save_path()).is_ok()
+    fn is_processed(&self, model: &str, prompt: &str) -> bool {
+        std::fs::metadata(self.get_save_path(model, prompt)).is_ok()
     }
-    async fn save_result(&self, content: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let save_path = self.get_save_path();
+    async fn save_result(&self, content: String, model: &str, prompt: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let save_path = self.get_save_path(model, prompt);
         let mut file = tokio::fs::OpenOptions::new().create(true).write(true).open(save_path).await?;
         file.write_all(content.as_bytes()).await?;
         Ok(())
@@ -42,10 +47,10 @@ impl Media {
         }
     }
 
-    pub fn is_processed(&self) -> bool {
+    pub fn is_processed(&self, model: &str, prompt: &str) -> bool {
         match self {
-            Media::Image(image) => image.is_processed(),
-            Media::Video(video) => video.is_processed(),
+            Media::Image(image) => image.is_processed(model, prompt),
+            Media::Video(video) => video.is_processed(model, prompt),
             Media::Unsupported => false
         }
     }
@@ -58,10 +63,10 @@ impl Media {
         }
     }
 
-    pub async fn save_result(&self, cap: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn save_result(&self, content: String, model: &str, prompt: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         match self {
-            Media::Image(image) => image.save_result(cap).await,
-            Media::Video(video) => video.save_result(cap).await,
+            Media::Image(image) => image.save_result(content, model, &prompt).await,
+            Media::Video(video) => video.save_result(content, model, &prompt).await,
             Media::Unsupported => Err("Unsupported media type".into()),
         }
     }
