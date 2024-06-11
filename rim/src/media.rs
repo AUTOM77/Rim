@@ -28,7 +28,7 @@ pub trait MediaProcessor {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Media {
     Image(Image),
     Video(Video),
@@ -72,12 +72,12 @@ impl Media {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Image {
     path: PathBuf,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Video {
     path: PathBuf,
 }

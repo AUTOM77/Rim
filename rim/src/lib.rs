@@ -38,6 +38,11 @@ async fn processing(
     clients: Vec<Service>,
     limit: usize
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    if clients.is_empty() {
+        eprintln!("No services configured");
+        return Ok(());
+    }
+
     let mut tasks = futures::stream::FuturesUnordered::new();
     for prompt in prompts{
         let mut num = 0;
@@ -64,6 +69,17 @@ async fn processing(
     Ok(())
 }
 
+fn load_services(conf: &client::Config, key: &str) -> Vec<Service> {
+    conf.get(key)
+        .map(|s| {
+            s.into_iter()
+                .filter_map(|p| Service::from(key, p.endpoint.clone(), p.key.clone(), p.model.clone()))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+
 pub fn interface(pth: std::path::PathBuf, conf: String, limit: Option<usize>, qps: Option<usize>) -> Result<(), Box<dyn std::error::Error>>{
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     let pth = match pth.is_file() {
@@ -73,13 +89,6 @@ pub fn interface(pth: std::path::PathBuf, conf: String, limit: Option<usize>, qp
         },
         false => pth,
     };
-    let conf = conf.parse::<client::Config>()?;
-    let prompts = conf.prompts();
-    let azure: Vec<Service> = conf.get("azure")
-        .unwrap()
-        .into_iter()
-        .filter_map(|p| Service::from("azure", p.endpoint.clone(), p.key.clone(), p.model.clone()))
-        .collect();
 
     let media: Vec<_> = std::fs::read_dir(pth)
         .unwrap()
@@ -88,10 +97,17 @@ pub fn interface(pth: std::path::PathBuf, conf: String, limit: Option<usize>, qp
         // .filter(|c| !c.is_processed() )
         .collect();
 
+    let conf = conf.parse::<client::Config>()?;
+    let prompts = conf.prompts();
+    let azure = load_services(&conf, "azure");
+    let gemini = load_services(&conf, "gemini");
+
     let limit_num = limit.unwrap_or(100);
     let qps_num = qps.unwrap_or(30);
 
     let limited_media: Vec<Media> = media.into_iter().take(limit_num).collect();
-    rt.block_on(processing(prompts, limited_media, azure, qps_num));
+
+    rt.block_on(processing(prompts.clone(), limited_media.clone(), azure, qps_num));
+    rt.block_on(processing(prompts.clone(), limited_media.clone(), gemini, qps_num));
     Ok(())
 }
