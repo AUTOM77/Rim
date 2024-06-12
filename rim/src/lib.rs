@@ -23,7 +23,10 @@ async fn caption(
             Ok(res) => break res,
             Err(e) => {
                 retries += 1;
-                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
+                if retries >= 3 { 
+                    println!("Failed to process media: {:#?}", media.path());
+                }
                 println!("Retry {retries} - {:#?}", e);
             }
         };

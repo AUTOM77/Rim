@@ -46,6 +46,14 @@ impl Media {
             _ => None,
         }
     }
+    
+    pub fn path(&self) -> Option<PathBuf> {
+        match self {
+            Media::Image(image) => Some(image.path().into()),
+            Media::Video(video) => Some(video.path().into()),
+            Media::Unsupported => None
+        }
+    }
 
     pub fn is_processed(&self, model: &str, prompt: &str) -> bool {
         match self {

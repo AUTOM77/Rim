@@ -28,7 +28,6 @@ pub trait API {
         }
 
         let json: serde_json::Value = response.json().await?;
-
         println!("HTTP Response time: {:?}", start_time.elapsed());
         let caption = self.parse_response(json.clone())?;
         let consumption = self.parse_consumption(json)?;
@@ -192,17 +191,37 @@ impl API for Gemini {
         usr_content.push(text_content);
         usr_content.extend(image_content);
 
-        let usr_msg = json!({ "role": "user", "parts": usr_content });
+        let usr_msg = json!({"role": "user", "parts": usr_content });
 
         json!({
-            "contents": [usr_msg]
+            "contents": [usr_msg],
+            "safetySettings": [
+                {
+                "category": "HARM_CATEGORY_HARASSMENT",
+                "threshold": "BLOCK_NONE"
+                },
+                {
+                "category": "HARM_CATEGORY_HATE_SPEECH",
+                "threshold": "BLOCK_NONE"
+                },
+                {
+                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                "threshold": "BLOCK_NONE"
+                },
+                {
+                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                "threshold": "BLOCK_NONE"
+                }
+            ]
         })
     }
 
     fn parse_response(&self, response: serde_json::Value) -> Result<String, Box<dyn std::error::Error>> {
+        let response_text = response.to_string();
+
         let caption = response["candidates"][0]["content"]["parts"][0]["text"]
             .as_str()
-            .ok_or("Failed to parse response")?;
+            .ok_or_else(|| format!("Failed to parse response: {}", response_text))?;
         Ok(caption.to_string())
     }
 
