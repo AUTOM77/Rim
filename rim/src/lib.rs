@@ -8,65 +8,117 @@ use crate::media::MediaProcessor;
 
 use futures::StreamExt;
 
-async fn caption(
+async fn caption_n_shot(
     prompt: Prompt,
-    media: &Media,
-    clt: &Service,
-    idx: usize
+    media: Media,
+    service: &Service,
+    idx: usize,
+    retry: usize
 ) -> Result<(usize, String), Box<dyn std::error::Error + Send + Sync>> {
     let images = media.process().await.unwrap();
-    let _delay = (idx % 100) * 200;
-    let mut retries = 0;
-    let (caption, consumption) = loop {
-        tokio::time::sleep(tokio::time::Duration::from_millis(_delay as u64)).await;
-        match clt.get_caption(&prompt.value, images.clone()).await {
-            Ok(res) => break res,
-            Err(e) => {
-                retries += 1;
-                tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
-                if retries >= 3 { 
-                    let failed_media = format!("{:#?}", media.path());
-                    return Err(failed_media.into());
-                }
-                println!("Retry {retries} - {:#?}", e);
-            }
-        };
+    let delay = match retry {
+        0 => (idx % 100) * 200,
+        1 => 30 * 1000,
+        2 => 60 * 1000,
+        _ => 60 * 1000,
     };
-    let _ = media.save_result(caption, clt.current_model(), prompt.name).await?;
-    Ok((idx, consumption))
+    tokio::time::sleep(tokio::time::Duration::from_millis(delay as u64)).await;
+
+    match service.get_caption(&prompt.value, images.clone()).await {
+        Ok(res) => {
+            let (caption, consumption) = res;
+            let _ = media.save_result(caption, service.current_model(), prompt.name).await?;
+            eprintln!("{}-shot Success: {:?}, Consumption: {}", retry, media.path(), consumption);
+            Ok((idx, consumption))
+        },
+        Err(e) => {
+            let failed = format!("{:#?}", media.path().unwrap());
+            eprintln!("{}-shot failed: {:?}", retry, e);
+            Err(failed.into())
+        }
+    }
 }
 
 async fn processing(
     prompts: Vec<Prompt>,
     media: Vec<Media>,
-    clients: Vec<Service>,
+    services: Vec<Service>,
     limit: usize
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    if clients.is_empty() {
+    if services.is_empty() {
         eprintln!("No services configured");
         return Ok(());
     }
 
     let mut tasks = futures::stream::FuturesUnordered::new();
-    for prompt in prompts{
+    let mut failed_tasks = Vec::new();
+    let max_retries = 3;
+
+    for prompt in &prompts{
         let mut num = 0;
-        for chunk in media.chunks(limit) {
-            for m in chunk {
-                let clt = &clients[num % clients.len()];
-                if !m.is_processed(clt.current_model(), &prompt.name){
-                    tasks.push(caption(prompt.clone(), m, clt, num));
+        for _limited in media.chunks(limit) {
+            for _media in _limited {
+                let service = &services[num % services.len()];
+                if !_media.is_processed(service.current_model(), &prompt.name){
+                    tasks.push(caption_n_shot(prompt.clone(), _media.clone(), service, num, 0));
+                    num += 1;
+                }
+            }
+            while let Some(handle) = tasks.next().await {
+                match handle {
+                    Ok((i, c)) => eprintln!("Success: {:?}, Consumption: {}", i, c),
+                    Err(e) => {
+                        eprintln!("Zero-shot Task failed: {:?}", e);
+                        failed_tasks.push(e);
+                    }
+                };
+            }
+            tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+            tasks.clear();
+        }
+    }
+
+    for retry in 1..=max_retries {
+        let mut current_failed_tasks = Vec::new();
+        let mut num = 0;
+
+        let media: Vec<_> = failed_tasks
+            .into_iter()
+            .map(|e| format!("{}",e))
+            .filter_map(|f| Media::from(f.into()))
+            .collect();
+
+        for prompt in &prompts{
+            for _media in &media {
+                let service = &services[num % services.len()];
+                if !_media.is_processed(service.current_model(), &prompt.name){
+                    tasks.push(caption_n_shot(prompt.clone(), _media.clone(), service, num, 0));
                     num += 1;
                 }
             }
 
             while let Some(handle) = tasks.next().await {
-                let _ = match handle {
-                    Ok((i, c)) => eprintln!("Success: {:?}, Consumption: {}", i, c),
-                    Err(e) => eprintln!("Task failed: {:?}", e),
+                match handle {
+                    Ok((i, c)) => eprintln!("{}-shot, Success: {:?}, Consumption: {}", retry, i, c),
+                    Err(e) => {
+                        eprintln!("{}-shot Task failed: {:?}", retry, e);
+                        current_failed_tasks.push(e);
+                    }
                 };
             }
-            tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-            tasks.clear();
+        }
+
+        failed_tasks = current_failed_tasks;
+
+        if failed_tasks.is_empty() {
+            break;
+        }
+    }
+
+    if !failed_tasks.is_empty() {
+        eprintln!("Media failed after {} retries:", max_retries);
+        for media_path in failed_tasks {
+            eprintln!("{:?}", media_path);
         }
     }
 
@@ -97,7 +149,6 @@ pub fn interface(pth: std::path::PathBuf, conf: String, limit: Option<usize>, qp
         .unwrap()
         .filter_map(Result::ok)
         .filter_map(|f| Media::from(f.path()))
-        // .filter(|c| !c.is_processed() )
         .collect();
 
     let conf = conf.parse::<client::Config>()?;
