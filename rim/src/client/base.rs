@@ -26,6 +26,7 @@ pub trait API {
             println!("{:#?}", response);
             return Err(format!("HTTP error: {} - {}", response.status(), response.text().await?).into());
         }
+
         let json: serde_json::Value = response.json().await?;
 
         println!("HTTP Response time: {:?}", start_time.elapsed());
@@ -128,12 +129,13 @@ impl API for Azure {
     }
 
     fn parse_response(&self, response: serde_json::Value) -> Result<String, Box<dyn std::error::Error>> {
+        let response_text = response.to_string();
         let caption = response["choices"][0]["message"]["content"]
             .as_str()
-            .ok_or("Failed to parse response")?;
+            .ok_or_else(|| format!("Failed to parse response: {}", response_text))?;
         Ok(caption.to_string())
     }
-
+    
     fn parse_consumption(&self, response: serde_json::Value) -> Result<String, Box<dyn std::error::Error>> {
         Ok(response["usage"].to_string())
     }
