@@ -25,7 +25,8 @@ async fn caption(
                 retries += 1;
                 tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
                 if retries >= 3 { 
-                    println!("Failed to process media: {:#?}", media.path());
+                    let failed_media = format!("{:#?}", media.path());
+                    return Err(failed_media.into());
                 }
                 println!("Retry {retries} - {:#?}", e);
             }
