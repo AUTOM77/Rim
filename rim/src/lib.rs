@@ -18,10 +18,10 @@ async fn caption_n_shot(
 ) -> Result<(usize, String), Box<dyn std::error::Error + Send + Sync>> {
     let images = media.process().await.unwrap();
     let delay = match retry {
-        0 => (idx % 100) * 200,
-        1 => 30 * 1000,
-        2 => 60 * 1000,
-        _ => 60 * 1000,
+        0 => (idx % 100) * 10,
+        1 => 30 * 100,
+        2 => 60 * 100,
+        _ => 60 * 100,
     };
     tokio::time::sleep(tokio::time::Duration::from_millis(delay as u64)).await;
 
