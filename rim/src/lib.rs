@@ -34,7 +34,7 @@ async fn caption_n_shot(
         },
         Err(e) => {
             let failed = format!("{}", media.path().unwrap().display());
-            eprintln!("{}-shot {failed} failed: {:?}", retry, e);
+            // eprintln!("{}-shot {failed} failed: {:?}", retry, e);
             Err(failed.into())
         }
     }
@@ -89,7 +89,7 @@ async fn processing(
                 pb.inc(1);
                 match handle {
                     Ok((i, c)) => {
-                        eprintln!("Success: {:?}, Consumption: {}", i, c);
+                        success_pb.set_message(format!("Consumption: {}", c));
                         success_pb.inc(1);
                     },
                     Err(e) => failed_tasks.push(e)
@@ -126,11 +126,11 @@ async fn processing(
                 pb.inc(1);
                 match handle {
                     Ok((i, c)) => {
-                        eprintln!("{}-shot, Success: {:?}, Consumption: {}", retry, i, c);
+                        success_pb.set_message(format!("Consumption: {}", c));
                         success_pb.inc(1);
                     },
                     Err(e) => {
-                        eprintln!("{}-shot Task failed: {:?}", retry, e);
+                        // eprintln!("{}-shot Task failed: {:?}", retry, e);
                         current_failed_tasks.push(e);
                     }
                 };
@@ -145,9 +145,8 @@ async fn processing(
     }
 
     if !failed_tasks.is_empty() {
-        eprintln!("Media failed after {} retries:", max_retries);
         for media_path in failed_tasks {
-            eprintln!("{:?}", media_path);
+            eprintln!("Media {:?} failed after {} retries:", media_path, max_retries);
         }
     }
 

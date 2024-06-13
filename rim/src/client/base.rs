@@ -13,7 +13,6 @@ pub trait API {
         let headers = self.get_headers();
         let payload = self.get_payload(user_prompt, images_base64);
         let url = self.get_url();
-        let start_time = std::time::Instant::now();
 
         let client = reqwest::Client::builder()
             .http2_keep_alive_timeout(std::time::Duration::from_secs(15))
@@ -32,7 +31,6 @@ pub trait API {
         }
 
         let json: serde_json::Value = response.json().await?;
-        println!("HTTP Response time: {:?}", start_time.elapsed());
         let caption = self.parse_response(json.clone())?;
         let consumption = self.parse_consumption(json)?;
         Ok((caption, consumption))
