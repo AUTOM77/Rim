@@ -29,7 +29,6 @@ async fn caption_n_shot(
         Ok(res) => {
             let (caption, consumption) = res;
             let _ = media.save_result(caption, service.current_model(), prompt.name).await?;
-            eprintln!("{}-shot Success: {:?}, Consumption: {}", retry, media.path(), consumption);
             Ok((idx, consumption))
         },
         Err(e) => {
@@ -62,14 +61,11 @@ async fn processing(
     let failure_pb = m.add(ProgressBar::new(total_tasks as u64));
     
     let pb_style = ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {pos}/{len} ({eta})")?
-        .progress_chars("#>-");
+        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {pos}/{len} ({eta})")?;
     let success_pb_style = ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.green} {pos}/{len} ({eta}) Successes")?
-        .progress_chars("#>-");
+        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.green} {pos}/{len} ({eta}) Successes")?;
     let failure_pb_style = ProgressStyle::default_bar()
-        .template("{spinner:.red} [{elapsed_precise}] {wide_bar:.red} {pos}/{len} ({eta}) Failures")?
-        .progress_chars("#>-");
+        .template("{spinner:.red} [{elapsed_precise}] {wide_bar:.red} {pos}/{len} ({eta}) Failures")?;
 
     pb.set_style(pb_style);
     success_pb.set_style(success_pb_style);
@@ -89,7 +85,7 @@ async fn processing(
                 pb.inc(1);
                 match handle {
                     Ok((i, c)) => {
-                        success_pb.set_message(format!("Consumption: {}", c));
+                        success_pb.set_message(format!("{} Consumption: {}", i, c));
                         success_pb.inc(1);
                     },
                     Err(e) => failed_tasks.push(e)
@@ -126,11 +122,11 @@ async fn processing(
                 pb.inc(1);
                 match handle {
                     Ok((i, c)) => {
-                        success_pb.set_message(format!("Consumption: {}", c));
+                        success_pb.set_message(format!("{} Consumption: {}", i, c));
                         success_pb.inc(1);
                     },
                     Err(e) => {
-                        // eprintln!("{}-shot Task failed: {:?}", retry, e);
+                        eprintln!("{}-shot Task failed: {:?}", retry, e);
                         current_failed_tasks.push(e);
                     }
                 };
@@ -176,6 +172,8 @@ pub fn interface(pth: std::path::PathBuf, conf: String, limit: Option<usize>, qp
         },
         false => pth,
     };
+
+    println!("In {:?}", pth);
 
     let media: Vec<_> = std::fs::read_dir(pth)
         .unwrap()
