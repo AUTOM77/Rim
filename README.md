@@ -47,6 +47,13 @@ Rim generates a `*.txt` file containing the caption for a single image or video.
 rim -d ${dir_path} -c `config.toml`
 ```
 
+3. **Batch of Batch:**
+
+```bash
+DATA=/data
+for i in $DATA/*; do [ -d "$i" ] && ./target/release/rim $i -c config.toml  --limit 1500 --qps 500 ; done
+```
+
 For a directory of images or videos, `Rim` generates a corresponding list of `*.txt` caption files.
 </details>
 

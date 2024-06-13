@@ -15,7 +15,11 @@ pub trait API {
         let url = self.get_url();
         let start_time = std::time::Instant::now();
 
-        let client = reqwest::Client::new();
+        let client = reqwest::Client::builder()
+            .http2_keep_alive_timeout(std::time::Duration::from_secs(15))
+            .build()
+            .unwrap();
+
         let response = client.post(&url)
             .headers(headers)
             .json(&payload)

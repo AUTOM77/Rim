@@ -1,3 +1,6 @@
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use futures::StreamExt;
+
 pub mod client;
 pub mod media;
 
@@ -5,8 +8,6 @@ pub use media::Media;
 pub use client::{Service, Prompt};
 use crate::client::base::API;
 use crate::media::MediaProcessor;
-
-use futures::StreamExt;
 
 async fn caption_n_shot(
     prompt: Prompt,
@@ -32,8 +33,8 @@ async fn caption_n_shot(
             Ok((idx, consumption))
         },
         Err(e) => {
-            let failed = format!("{:#?}", media.path().unwrap());
-            eprintln!("{}-shot failed: {:?}", retry, e);
+            let failed = format!("{}", media.path().unwrap().display());
+            eprintln!("{}-shot {failed} failed: {:?}", retry, e);
             Err(failed.into())
         }
     }
@@ -53,24 +54,45 @@ async fn processing(
     let mut tasks = futures::stream::FuturesUnordered::new();
     let mut failed_tasks = Vec::new();
     let max_retries = 3;
+    let total_tasks = prompts.len() * media.len();
+    
+    let m = MultiProgress::new();
+    let pb = m.add(ProgressBar::new(total_tasks as u64));
+    let success_pb = m.add(ProgressBar::new(total_tasks as u64));
+    let failure_pb = m.add(ProgressBar::new(total_tasks as u64));
+    
+    let pb_style = ProgressStyle::default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {pos}/{len} ({eta})")?
+        .progress_chars("#>-");
+    let success_pb_style = ProgressStyle::default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.green} {pos}/{len} ({eta}) Successes")?
+        .progress_chars("#>-");
+    let failure_pb_style = ProgressStyle::default_bar()
+        .template("{spinner:.red} [{elapsed_precise}] {wide_bar:.red} {pos}/{len} ({eta}) Failures")?
+        .progress_chars("#>-");
 
-    for prompt in &prompts{
+    pb.set_style(pb_style);
+    success_pb.set_style(success_pb_style);
+    failure_pb.set_style(failure_pb_style);
+
+    for prompt in &prompts {
         let mut num = 0;
         for _limited in media.chunks(limit) {
             for _media in _limited {
                 let service = &services[num % services.len()];
-                if !_media.is_processed(service.current_model(), &prompt.name){
+                if !_media.is_processed(service.current_model(), &prompt.name) {
                     tasks.push(caption_n_shot(prompt.clone(), _media.clone(), service, num, 0));
                     num += 1;
                 }
             }
             while let Some(handle) = tasks.next().await {
+                pb.inc(1);
                 match handle {
-                    Ok((i, c)) => eprintln!("Success: {:?}, Consumption: {}", i, c),
-                    Err(e) => {
-                        eprintln!("Zero-shot Task failed: {:?}", e);
-                        failed_tasks.push(e);
-                    }
+                    Ok((i, c)) => {
+                        eprintln!("Success: {:?}, Consumption: {}", i, c);
+                        success_pb.inc(1);
+                    },
+                    Err(e) => failed_tasks.push(e)
                 };
             }
             tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
@@ -78,28 +100,35 @@ async fn processing(
         }
     }
 
+    failure_pb.set_length(failed_tasks.len() as u64);
+    failure_pb.inc(failed_tasks.len() as u64);
+
     for retry in 1..=max_retries {
         let mut current_failed_tasks = Vec::new();
         let mut num = 0;
 
         let media: Vec<_> = failed_tasks
             .into_iter()
-            .map(|e| format!("{}",e))
+            .map(|e| format!("{}", e))
             .filter_map(|f| Media::from(f.into()))
             .collect();
 
-        for prompt in &prompts{
+        for prompt in &prompts {
             for _media in &media {
                 let service = &services[num % services.len()];
-                if !_media.is_processed(service.current_model(), &prompt.name){
+                if !_media.is_processed(service.current_model(), &prompt.name) {
                     tasks.push(caption_n_shot(prompt.clone(), _media.clone(), service, num, 0));
                     num += 1;
                 }
             }
 
             while let Some(handle) = tasks.next().await {
+                pb.inc(1);
                 match handle {
-                    Ok((i, c)) => eprintln!("{}-shot, Success: {:?}, Consumption: {}", retry, i, c),
+                    Ok((i, c)) => {
+                        eprintln!("{}-shot, Success: {:?}, Consumption: {}", retry, i, c);
+                        success_pb.inc(1);
+                    },
                     Err(e) => {
                         eprintln!("{}-shot Task failed: {:?}", retry, e);
                         current_failed_tasks.push(e);
@@ -122,6 +151,10 @@ async fn processing(
         }
     }
 
+    pb.finish_with_message("Processing completed");
+    success_pb.finish_with_message("Successes completed");
+    failure_pb.finish_with_message("Failures completed");
+
     Ok(())
 }
 
@@ -135,7 +168,7 @@ fn load_services(conf: &client::Config, key: &str) -> Vec<Service> {
         .unwrap_or_default()
 }
 
-pub fn interface(pth: std::path::PathBuf, conf: String, limit: Option<usize>, qps: Option<usize>) -> Result<(), Box<dyn std::error::Error>>{
+pub fn interface(pth: std::path::PathBuf, conf: String, limit: Option<usize>, qps: Option<usize>) -> Result<(), Box<dyn std::error::Error>> {
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
     let pth = match pth.is_file() {
         true => {
