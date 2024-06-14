@@ -57,13 +57,19 @@ async fn processing(
         .unwrap()
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ");
 
+    let success_style = ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] {wide_bar:.green} {pos}/{len} ({eta})")
+        .unwrap();
+    let failure_style = ProgressStyle::with_template("{spinner:.red} [{elapsed_precise}] {wide_bar:.red} {pos}/{len} ({eta})")
+        .unwrap();
+
+
     let pb = m.add(ProgressBar::new(total_tasks as u64));
     let success_pb = m.add(ProgressBar::new(0));
     let failure_pb = m.add(ProgressBar::new(0));
 
-    pb.set_style(spinner_style.clone());
-    success_pb.set_style(spinner_style.clone());
-    failure_pb.set_style(spinner_style.clone());
+    pb.set_style(spinner_style);
+    success_pb.set_style(success_style);
+    failure_pb.set_style(failure_style);
 
     let mut tasks = futures::stream::FuturesUnordered::new();
     let mut failed_tasks = Vec::new();
@@ -124,7 +130,8 @@ async fn processing(
                         success_pb.inc(1);
                     },
                     Err(e) => {
-                        eprintln!("{}-shot Task failed: {:?}", retry, e);
+                        let mut file = std::fs::OpenOptions::new().create(true).append(true).open("/tmp/failed.txt")?;
+                        writeln!(file, "{}", e)?;
                         current_failed_tasks.push(e);
                     }
                 };
@@ -138,13 +145,13 @@ async fn processing(
         }
     }
 
-    if !failed_tasks.is_empty() {
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open("/tmp/failed.txt")?;
-        for media_path in failed_tasks {
-            writeln!(file, "{:?}", media_path)?;
-            eprintln!("Media {:?} failed after {} retries:", media_path, max_retries);
-        }
-    }
+    // if !failed_tasks.is_empty() {
+    //     let mut file = std::fs::OpenOptions::new().create(true).append(true).open("/tmp/failed.txt")?;
+    //     for media_path in failed_tasks {
+    //         writeln!(file, "{}", media_path)?;
+    //         eprintln!("Media {:?} failed after {} retries:", media_path, max_retries);
+    //     }
+    // }
 
     pb.finish_with_message("Processing completed");
     success_pb.finish_with_message("Successes completed");
