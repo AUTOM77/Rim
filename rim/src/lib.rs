@@ -1,5 +1,6 @@
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use futures::StreamExt;
+use std::io::{self, Write};
 
 pub mod client;
 pub mod media;
@@ -50,26 +51,23 @@ async fn processing(
         return Ok(());
     }
 
+    let total_tasks = prompts.len() * media.len();
+    let m = MultiProgress::new();
+    let spinner_style = ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {pos}/{len} ({eta})")
+        .unwrap()
+        .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ");
+
+    let pb = m.add(ProgressBar::new(total_tasks as u64));
+    let success_pb = m.add(ProgressBar::new(0));
+    let failure_pb = m.add(ProgressBar::new(0));
+
+    pb.set_style(spinner_style.clone());
+    success_pb.set_style(spinner_style.clone());
+    failure_pb.set_style(spinner_style.clone());
+
     let mut tasks = futures::stream::FuturesUnordered::new();
     let mut failed_tasks = Vec::new();
     let max_retries = 3;
-    let total_tasks = prompts.len() * media.len();
-    
-    let m = MultiProgress::new();
-    let pb = m.add(ProgressBar::new(total_tasks as u64));
-    let success_pb = m.add(ProgressBar::new(total_tasks as u64));
-    let failure_pb = m.add(ProgressBar::new(total_tasks as u64));
-    
-    let pb_style = ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.cyan/blue} {pos}/{len} ({eta})")?;
-    let success_pb_style = ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] {wide_bar:.green} {pos}/{len} ({eta}) Successes")?;
-    let failure_pb_style = ProgressStyle::default_bar()
-        .template("{spinner:.red} [{elapsed_precise}] {wide_bar:.red} {pos}/{len} ({eta}) Failures")?;
-
-    pb.set_style(pb_style);
-    success_pb.set_style(success_pb_style);
-    failure_pb.set_style(failure_pb_style);
 
     for prompt in &prompts {
         let mut num = 0;
@@ -141,7 +139,9 @@ async fn processing(
     }
 
     if !failed_tasks.is_empty() {
+        let mut file = std::fs::OpenOptions::new().create(true).append(true).open("/tmp/failed.txt")?;
         for media_path in failed_tasks {
+            writeln!(file, "{:?}", media_path)?;
             eprintln!("Media {:?} failed after {} retries:", media_path, max_retries);
         }
     }
